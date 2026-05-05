@@ -1,0 +1,7 @@
+# UAD Language files
+*.uad linguist-language=UAD
+*.uadmodel linguist-language=UAD
+*.uads linguist-language=UAD
+
+# Ensure these files are detected as UAD language
+# See: https://github.com/github/linguist/blob/master/docs/overrides.md

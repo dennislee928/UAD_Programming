@@ -1,0 +1,337 @@
+// musical_score.uad
+// Comprehensive Musical DSL example demonstrating score/track/bars/motif syntax
+// Shows multi-track temporal coordination for cyber simulation
+
+// ============================================================================
+// Event Structure Definition
+// ============================================================================
+
+struct Event {
+    type: String,
+    target: String,
+    intensity: Int,
+    severity: Int,
+    action: String,
+    data_size: Int,
+    destination: String,
+    protocol: String,
+    ratio: Float,
+}
+
+// ============================================================================
+// Motif Definitions - Reusable Temporal Patterns
+// ============================================================================
+
+// Basic reconnaissance motif
+motif reconnaissance {
+    emit Event {
+        type: "scan",
+        target: "network",
+        intensity: 3,
+    };
+    
+    emit Event {
+        type: "enumerate",
+        target: "services",
+        intensity: 2,
+    };
+}
+
+// Attack motif with parameters
+motif attack_pattern(severity: Int, target: String) {
+    emit Event {
+        type: "exploit",
+        severity: severity,
+        target: target,
+    };
+    
+    emit Event {
+        type: "payload_delivery",
+        severity: severity + 1,
+        target: target,
+    };
+}
+
+// Defense motif
+motif defense_response(alert_level: Int) {
+    if alert_level > 7 {
+        emit Event {
+            type: "block",
+            action: "immediate",
+            severity: alert_level,
+        };
+    } else if alert_level > 4 {
+        emit Event {
+            type: "quarantine",
+            action: "isolate",
+            severity: alert_level,
+        };
+    } else {
+        emit Event {
+            type: "monitor",
+            action: "log",
+            severity: alert_level,
+        };
+    }
+}
+
+// Data exfiltration motif
+motif data_exfiltration(data_size: Int, destination: String) {
+    emit Event {
+        type: "collection",
+        data_size: data_size,
+    };
+    
+    emit Event {
+        type: "compression",
+        ratio: 0.3,
+    };
+    
+    emit Event {
+        type: "transmission",
+        destination: destination,
+        protocol: "https",
+    };
+}
+
+// ============================================================================
+// Main Score - Multi-Track Cyber Simulation
+// ============================================================================
+
+score CyberSecuritySimulation {
+    tempo: 120,  // Events per minute
+    
+    // Track 1: Red Team (Attacker)
+    track red_team {
+        // Bars 1-4: Initial Reconnaissance
+        bars 1..4 {
+            let scan_intensity: Int = 5;
+            
+            bars 1..2 {
+                use reconnaissance;
+            }
+            
+            bars 3..4 {
+                use attack_pattern(scan_intensity, "web_server");
+            }
+        }
+        
+        // Bars 5-8: Active Attack Phase
+        bars 5..8 {
+            let attack_severity: Int = 8;
+            
+            bars 5..6 {
+                use attack_pattern(attack_severity, "database");
+            }
+            
+            bars 7..8 {
+                use attack_pattern(attack_severity + 2, "backup_server");
+            }
+        }
+        
+        // Bars 9-12: Data Exfiltration
+        bars 9..12 {
+            let data_amount: Int = 5000;
+            let c2_server: String = "evil.example.com";
+            
+            bars 9..10 {
+                use data_exfiltration(data_amount, c2_server);
+            }
+            
+            bars 11..12 {
+                emit Event {
+                    type: "cleanup",
+                    action: "remove_artifacts",
+                };
+            }
+        }
+    }
+    
+    // Track 2: Blue Team (Defender)
+    track blue_team {
+        // Bars 1-4: Baseline Monitoring
+        bars 1..4 {
+            emit Event {
+                type: "baseline_scan",
+                status: "normal",
+                alert_count: 0,
+            };
+        }
+        
+        // Bars 5-8: Detection Phase
+        bars 5..8 {
+            let alert_level: Int = 5;
+            
+            bars 5..6 {
+                emit Event {
+                    type: "siem_alert",
+                    level: alert_level,
+                    source: "ids",
+                };
+            }
+            
+            bars 7..8 {
+                use defense_response(alert_level);
+            }
+        }
+        
+        // Bars 9-12: Response and Containment
+        bars 9..12 {
+            let critical_alert: Int = 9;
+            
+            bars 9..10 {
+                use defense_response(critical_alert);
+            }
+            
+            bars 11..12 {
+                emit Event {
+                    type: "forensic_analysis",
+                    scope: "full_network",
+                };
+                
+                emit Event {
+                    type: "incident_report",
+                    status: "contained",
+                };
+            }
+        }
+    }
+    
+    // Track 3: System State
+    track system_state {
+        // Bars 1-4: Normal Operation
+        bars 1..4 {
+            emit Event {
+                type: "health_check",
+                status: "healthy",
+                cpu_usage: 30,
+                memory_usage: 45,
+            };
+        }
+        
+        // Bars 5-8: Degraded Performance
+        bars 5..8 {
+            emit Event {
+                type: "performance_alert",
+                status: "degraded",
+                cpu_usage: 75,
+                memory_usage: 85,
+            };
+        }
+        
+        // Bars 9-12: Recovery
+        bars 9..12 {
+            emit Event {
+                type: "recovery_start",
+                status: "recovering",
+            };
+            
+            emit Event {
+                type: "health_check",
+                status: "stabilizing",
+                cpu_usage: 50,
+                memory_usage: 60,
+            };
+        }
+    }
+    
+    // Track 4: Network Traffic
+    track network_traffic {
+        // Bars 1-4: Normal Traffic
+        bars 1..4 {
+            emit Event {
+                type: "traffic_baseline",
+                bytes_per_second: 1024,
+                connection_count: 50,
+            };
+        }
+        
+        // Bars 5-8: Suspicious Traffic Spike
+        bars 5..8 {
+            emit Event {
+                type: "traffic_spike",
+                bytes_per_second: 10485760,
+                connection_count: 500,
+                anomaly_score: 8.5,
+            };
+        }
+        
+        // Bars 9-12: Traffic Normalization
+        bars 9..12 {
+            emit Event {
+                type: "traffic_normalization",
+                bytes_per_second: 2048,
+                connection_count: 60,
+            };
+        }
+    }
+}
+
+// ============================================================================
+// Variation Example - Using Motif Variations
+// ============================================================================
+
+// Variation of attack pattern with different parameters
+score AttackVariation {
+    tempo: 150,  // Faster tempo
+    
+    track attacker {
+        bars 1..4 {
+            // Use base reconnaissance motif
+            use reconnaissance;
+        }
+        
+        bars 5..8 {
+            // Use attack_pattern with different severity
+            use attack_pattern(10, "critical_system");
+        }
+    }
+    
+    track defender {
+        bars 1..8 {
+            // Continuous monitoring
+            emit Event {
+                type: "continuous_monitoring",
+                mode: "high_alert",
+            };
+        }
+    }
+}
+
+// ============================================================================
+// Main Execution
+// ============================================================================
+
+fn main() {
+    println("=========================================");
+    println("Musical DSL - Cyber Security Simulation");
+    println("=========================================");
+    println("");
+    println("This example demonstrates:");
+    println("1. Score and Track declarations");
+    println("2. Bars for time-structured events");
+    println("3. Motif definitions and reuse");
+    println("4. Multi-track temporal coordination");
+    println("5. Parameterized motifs");
+    println("6. Score variations");
+    println("");
+    println("Track Overview:");
+    println("  - red_team: Attacker timeline");
+    println("  - blue_team: Defender timeline");
+    println("  - system_state: System health monitoring");
+    println("  - network_traffic: Network activity");
+    println("");
+    println("Temporal Structure:");
+    println("  Bars 1-4:   Initial phase (recon/monitoring)");
+    println("  Bars 5-8:   Active phase (attack/response)");
+    println("  Bars 9-12:  Final phase (exfiltration/recovery)");
+    println("");
+    println("Status: Parser ✅ | Runtime ⚠️ Partial");
+    println("");
+    println("To fully execute, the runtime needs:");
+    println("- TemporalGrid for bar-based scheduling");
+    println("- MotifRegistry for motif instantiation");
+    println("- Multi-track synchronization engine");
+    println("- Event queue processing");
+}
+

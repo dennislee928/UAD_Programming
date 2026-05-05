@@ -1,0 +1,25 @@
+fn main() -> Int {
+    println("Test: string operations");
+    
+    let text = "hello,world";
+    let parts = split(text, ",");
+    
+    if len(parts) == 2 {
+        println("✓ Pass: split works correctly");
+    } else {
+        println("✗ Fail: expected 2 parts");
+        return 1;
+    }
+    
+    let joined = join(parts, " ");
+    if contains(joined, "hello") {
+        println("✓ Pass: join and contains work");
+    } else {
+        println("✗ Fail: join/contains failed");
+        return 1;
+    }
+    
+    return 0;
+}
+
+

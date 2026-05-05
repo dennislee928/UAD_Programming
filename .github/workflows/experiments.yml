@@ -1,0 +1,184 @@
+name: Run Experiments
+
+on:
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      experiment_config:
+        description: 'Experiment config file (leave empty to run all)'
+        required: false
+        default: ''
+  
+  # Run weekly on Sunday at midnight UTC
+  schedule:
+    - cron: '0 0 * * 0'
+  
+  # Run on push to main branch (optional, can be disabled)
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'experiments/**'
+
+jobs:
+  run-experiments:
+    name: Run UAD Experiments
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        experiment:
+          - erh_demo
+          - adversarial_simulation
+      fail-fast: false
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      
+      - name: Install dependencies
+        run: |
+          go mod download
+          go mod tidy
+      
+      - name: Build UAD tools
+        run: make build
+      
+      - name: Verify experiment runner
+        run: |
+          ./bin/uad-runner -help
+          echo "✓ uad-runner is ready"
+      
+      - name: Validate experiment config
+        run: |
+          echo "Validating experiment config: ${{ matrix.experiment }}.yaml"
+          ./bin/uad-runner \
+            -config experiments/configs/${{ matrix.experiment }}.yaml \
+            -dry-run
+      
+      - name: Run experiment
+        id: run-experiment
+        run: |
+          echo "Running experiment: ${{ matrix.experiment }}"
+          ./bin/uad-runner \
+            -config experiments/configs/${{ matrix.experiment }}.yaml \
+            -output experiments/results \
+            -verbose
+      
+      - name: Check results
+        run: |
+          echo "Checking experiment results..."
+          ls -lh experiments/results/
+          
+          # Find the most recent result file
+          RESULT_FILE=$(ls -t experiments/results/${{ matrix.experiment }}_*.json | head -1)
+          
+          if [ -f "$RESULT_FILE" ]; then
+            echo "✓ Result file found: $RESULT_FILE"
+            echo "Result preview:"
+            cat "$RESULT_FILE" | jq '.experiment'
+            
+            # Check if experiment completed successfully
+            STATUS=$(cat "$RESULT_FILE" | jq -r '.status')
+            if [ "$STATUS" = "completed" ]; then
+              echo "✓ Experiment completed successfully"
+            else
+              echo "✗ Experiment failed with status: $STATUS"
+              exit 1
+            fi
+          else
+            echo "✗ No result file found"
+            exit 1
+          fi
+      
+      - name: Upload experiment results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: experiment-results-${{ matrix.experiment }}
+          path: experiments/results/
+          retention-days: 30
+      
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## Experiment: ${{ matrix.experiment }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          RESULT_FILE=$(ls -t experiments/results/${{ matrix.experiment }}_*.json 2>/dev/null | head -1)
+          
+          if [ -f "$RESULT_FILE" ]; then
+            echo "✅ Experiment completed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            cat "$RESULT_FILE" | jq '.experiment' >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Experiment failed or produced no results" >> $GITHUB_STEP_SUMMARY
+          fi
+  
+  # Optional: Aggregate results from all experiments
+  aggregate-results:
+    name: Aggregate Results
+    runs-on: ubuntu-latest
+    needs: run-experiments
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: all-results
+      
+      - name: List all results
+        run: |
+          echo "All experiment results:"
+          find all-results -name "*.json" -exec echo "  - {}" \;
+      
+      - name: Generate aggregate summary
+        run: |
+          echo "## 📊 Experiment Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Experiment | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          
+          for result_dir in all-results/experiment-results-*; do
+            if [ -d "$result_dir" ]; then
+              experiment_name=$(basename "$result_dir" | sed 's/experiment-results-//')
+              result_file=$(find "$result_dir" -name "*.json" | head -1)
+              
+              if [ -f "$result_file" ]; then
+                status=$(cat "$result_file" | jq -r '.status' 2>/dev/null || echo "unknown")
+                duration=$(cat "$result_file" | jq -r '.experiment.duration_ms' 2>/dev/null || echo "N/A")
+                
+                if [ "$status" = "completed" ]; then
+                  status_icon="✅"
+                else
+                  status_icon="❌"
+                fi
+                
+                echo "| $experiment_name | $status_icon $status | ${duration}ms |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note**: This is a placeholder implementation. Full UAD interpreter integration coming soon." >> $GITHUB_STEP_SUMMARY
+
+

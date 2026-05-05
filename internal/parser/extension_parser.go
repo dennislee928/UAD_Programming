@@ -37,8 +37,19 @@ func (p *Parser) parseScoreDecl() (ast.Decl, error) {
 				return nil, err
 			}
 			tracks = append(tracks, track)
+		} else if p.check(lexer.TokenIdent) {
+			// Skip metadata fields like "tempo: 120,"
+			p.advance() // field name
+			if p.match(lexer.TokenColon) {
+				// Skip the value expression
+				_, err := p.parseExpr()
+				if err != nil {
+					return nil, err
+				}
+				p.match(lexer.TokenComma) // optional comma
+			}
 		} else {
-			return nil, p.error("expected 'track' in score body")
+			return nil, p.error("expected 'track' or metadata field in score body")
 		}
 	}
 
@@ -79,12 +90,8 @@ func (p *Parser) parseTrackNode() (*ast.TrackNode, error) {
 				return nil, err
 			}
 			bars = append(bars, barRange)
-		} else if p.check(lexer.TokenUse) {
-			// Handle motif use within track
-			// For now, skip or parse as statement
-			return nil, p.error("motif use not yet fully implemented")
 		} else {
-			return nil, p.error("expected 'bars' or 'use' in track body")
+			return nil, p.error("expected 'bars' in track body")
 		}
 	}
 
@@ -126,8 +133,7 @@ func (p *Parser) parseBarRangeNode() (*ast.BarRangeNode, error) {
 		return nil, p.error("invalid end bar number")
 	}
 
-	p.consume(lexer.TokenLBrace, "expected '{'")
-
+	// parseBlockExpr will consume the '{'
 	body, err := p.parseBlockExpr()
 	if err != nil {
 		return nil, err
@@ -174,8 +180,7 @@ func (p *Parser) parseMotifDecl() (ast.Decl, error) {
 		p.consume(lexer.TokenRParen, "expected ')' after parameters")
 	}
 
-	p.consume(lexer.TokenLBrace, "expected '{'")
-
+	// parseBlockExpr will consume the '{'
 	body, err := p.parseBlockExpr()
 	if err != nil {
 		return nil, err
@@ -366,8 +371,7 @@ func (p *Parser) parseResonanceDecl() (ast.Decl, error) {
 		return nil, err
 	}
 
-	p.consume(lexer.TokenLBrace, "expected '{' after resonance condition")
-
+	// parseBlockExpr will consume the '{'
 	action, err := p.parseBlockExpr()
 	if err != nil {
 		return nil, err
@@ -382,6 +386,93 @@ func (p *Parser) parseResonanceDecl() (ast.Decl, error) {
 	}
 
 	return ast.NewResonanceRuleNode(condition, action, span), nil
+}
+
+// ==================== Emit Statement Parsing (M2.3) ====================
+
+// parseEmitStmt parses an emit statement.
+// Syntax: emit <TypeName> { <field>: <value>, ... };
+func (p *Parser) parseEmitStmt() (ast.Stmt, error) {
+	start := p.current().Span.Start
+	p.consume(lexer.TokenEmit, "expected 'emit'")
+
+	// Parse type name
+	typeName := p.parseIdent()
+	if typeName == nil {
+		return nil, p.error("expected event type name after 'emit'")
+	}
+
+	// Parse struct literal
+	if !p.check(lexer.TokenLBrace) {
+		return nil, p.error("expected '{' after type name in emit statement")
+	}
+
+	structLiteral, err := p.parseStructLiteralWithName(typeName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Consume semicolon
+	p.consume(lexer.TokenSemicolon, "expected ';' after emit statement")
+
+	end := p.previous().Span.End
+	span := common.Span{
+		File:  p.file,
+		Start: start,
+		End:   end,
+	}
+
+	structLit, ok := structLiteral.(*ast.StructLiteral)
+	if !ok {
+		return nil, p.error("expected struct literal in emit statement")
+	}
+
+	return ast.NewEmitStmt(typeName, structLit, span), nil
+}
+
+// parseUseStmt parses a use statement for calling motifs.
+// Syntax: use <motif_name>; or use <motif_name>(<args>);
+func (p *Parser) parseUseStmt() (ast.Stmt, error) {
+	start := p.current().Span.Start
+	p.consume(lexer.TokenUse, "expected 'use'")
+
+	// Parse motif name
+	motifName := p.parseIdent()
+	if motifName == nil {
+		return nil, p.error("expected motif name after 'use'")
+	}
+
+	// Parse optional arguments
+	var args []ast.Expr
+	if p.match(lexer.TokenLParen) {
+		// Parse argument list
+		if !p.check(lexer.TokenRParen) {
+			for {
+				arg, err := p.parseExpr()
+				if err != nil {
+					return nil, err
+				}
+				args = append(args, arg)
+
+				if !p.match(lexer.TokenComma) {
+					break
+				}
+			}
+		}
+		p.consume(lexer.TokenRParen, "expected ')' after arguments")
+	}
+
+	// Consume semicolon
+	p.consume(lexer.TokenSemicolon, "expected ';' after use statement")
+
+	end := p.previous().Span.End
+	span := common.Span{
+		File:  p.file,
+		Start: start,
+		End:   end,
+	}
+
+	return ast.NewUseStmt(motifName, args, span), nil
 }
 
 // ==================== Entanglement Parsing (M2.5) ====================
@@ -408,6 +499,8 @@ func (p *Parser) parseEntangleStmt() (ast.Stmt, error) {
 	if len(variables) < 2 {
 		return nil, p.error("entangle requires at least 2 variables")
 	}
+
+	p.consume(lexer.TokenSemicolon, "expected ';' after entangle statement")
 
 	end := p.previous().Span.End
 
@@ -449,6 +542,18 @@ func (p *Parser) ParseDeclExtension() (ast.Decl, error) {
 // Returns nil if the token doesn't match any extension statement.
 func (p *Parser) ParseStmtExtension() (ast.Stmt, error) {
 	switch {
+	case p.check(lexer.TokenBars):
+		// Allow bars as statements for nesting
+		barNode, err := p.parseBarRangeNode()
+		if err != nil {
+			return nil, err
+		}
+		// BarRangeNode implements stmtNode(), so we can return it as a statement
+		return barNode, nil
+	case p.check(lexer.TokenEmit):
+		return p.parseEmitStmt()
+	case p.check(lexer.TokenUse):
+		return p.parseUseStmt()
 	case p.check(lexer.TokenEntangle):
 		return p.parseEntangleStmt()
 	default:
@@ -489,7 +594,16 @@ func (p *Parser) parseParam() (*ast.Param, error) {
 func (p *Parser) parseField() (*ast.Field, error) {
 	start := p.current().Span.Start
 	
-	name := p.parseIdent()
+	// Allow keywords as field names (similar to struct literals)
+	var name *ast.Ident
+	if p.check(lexer.TokenIdent) {
+		name = p.parseIdent()
+	} else if lexer.IsKeyword(p.current().Type) {
+		tok := p.current()
+		p.advance()
+		name = ast.NewIdent(tok.Lexeme, tok.Span)
+	}
+	
 	if name == nil {
 		return nil, p.error("expected field name")
 	}

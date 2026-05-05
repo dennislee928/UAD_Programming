@@ -170,3 +170,4 @@ func (r *vmRuntime) Reset() {
 	r.output = ""
 }
 
+

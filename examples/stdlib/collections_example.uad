@@ -1,0 +1,89 @@
+// UAD Standard Library - Collections Example
+//
+// This example demonstrates the usage of Set and HashMap
+// collections from the standard library.
+
+fn main() -> Int {
+    println("=== UAD Collections Demo ===");
+    println("");
+    
+    // ========== Set Example ==========
+    println("--- Set Operations ---");
+    
+    let numbers = Set();
+    set_add(numbers, 1);
+    set_add(numbers, 2);
+    set_add(numbers, 3);
+    set_add(numbers, 2); // Duplicate, won't be added
+    
+    println("Set size: " + string(set_size(numbers))); // 3
+    println("Contains 2: " + string(set_contains(numbers, 2))); // true
+    println("Contains 5: " + string(set_contains(numbers, 5))); // false
+    
+    // Set operations
+    let evens = Set();
+    set_add(evens, 2);
+    set_add(evens, 4);
+    set_add(evens, 6);
+    
+    let union = set_union(numbers, evens);
+    println("Union size: " + string(set_size(union))); // {1,2,3,4,6}
+    
+    let intersection = set_intersection(numbers, evens);
+    println("Intersection size: " + string(set_size(intersection))); // {2}
+    
+    // ========== HashMap Example ==========
+    println("");
+    println("--- HashMap Operations ---");
+    
+    let scores = HashMap();
+    map_set(scores, "Alice", 95);
+    map_set(scores, "Bob", 87);
+    map_set(scores, "Charlie", 92);
+    
+    println("HashMap size: " + string(map_size(scores))); // 3
+    println("Alice's score: " + string(map_get(scores, "Alice"))); // 95
+    println("Has Bob: " + string(map_contains(scores, "Bob"))); // true
+    
+    // Update value
+    map_set(scores, "Alice", 98);
+    println("Alice's new score: " + string(map_get(scores, "Alice"))); // 98
+    
+    // Get all keys
+    let names = map_keys(scores);
+    println("Number of students: " + string(len(names)));
+    
+    // Merge maps
+    let bonus = HashMap();
+    map_set(bonus, "Alice", 5);
+    map_set(bonus, "David", 10);
+    
+    map_merge(scores, bonus);
+    println("After merge, size: " + string(map_size(scores))); // 4
+    
+    // ========== Advanced Example ==========
+    println("");
+    println("--- Word Counter (HashMap) ---");
+    
+    let text = "the quick brown fox jumps over the lazy dog the";
+    let words = split(text, " ");
+    let word_count = HashMap();
+    
+    for word in words {
+        if map_contains(word_count, word) {
+            let count = map_get(word_count, word);
+            map_set(word_count, word, count + 1);
+        } else {
+            map_set(word_count, word, 1);
+        }
+    }
+    
+    println("Unique words: " + string(map_size(word_count)));
+    println("'the' appears: " + string(map_get(word_count, "the")) + " times");
+    
+    println("");
+    println("=== Demo Complete ===");
+    
+    return 0;
+}
+

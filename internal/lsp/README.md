@@ -1,0 +1,196 @@
+# UAD Language Server (LSP)
+
+基於 Language Server Protocol (LSP) 的 UAD 語言伺服器實作。
+
+## 架構
+
+```
+internal/lsp/
+├── server.go           # 主伺服器 (JSON-RPC 通訊)
+├── documents.go        # 文檔管理
+├── analyzer.go         # 代碼分析
+├── protocol/           # LSP 協議類型定義
+│   └── types.go
+├── analysis/           # 深度分析 (TODO)
+├── completion/         # 自動補全 (TODO)
+├── diagnostics/        # 診斷 (TODO)
+└── navigation/         # 導航 (TODO)
+```
+
+## 已實作功能
+
+### ✅ Tier 1 基礎功能（部分）
+
+1. **文檔同步**:
+   - `textDocument/didOpen`
+   - `textDocument/didChange`
+   - `textDocument/didClose`
+
+2. **生命週期**:
+   - `initialize`
+   - `initialized`
+   - `shutdown`
+   - `exit`
+
+3. **基礎分析**:
+   - 語法解析
+   - 類型檢查整合
+
+### 🚧 開發中
+
+- 診斷發布 (`textDocument/publishDiagnostics`)
+- 自動補全 (`textDocument/completion`)
+- 懸停提示 (`textDocument/hover`)
+
+## 使用方式
+
+### 啟動伺服器
+
+```bash
+# 構建
+make build-lsp
+
+# 使用 stdio 傳輸（用於 VS Code 整合）
+./bin/uad-lsp -stdio
+
+# 啟用日誌
+./bin/uad-lsp -stdio -log /tmp/uad-lsp.log
+
+# 查看版本
+./bin/uad-lsp -version
+```
+
+### 與 VS Code 整合
+
+伺服器會自動被 VS Code 擴展啟動（如果 `uad.lsp.enable` 為 true）。
+
+配置路徑（VS Code settings.json）:
+
+```json
+{
+  "uad.lsp.enable": true,
+  "uad.lsp.serverPath": "uad-lsp"
+}
+```
+
+## 測試
+
+### 手動測試
+
+1. 啟動伺服器：
+```bash
+./bin/uad-lsp -stdio -log /tmp/uad-lsp.log
+```
+
+2. 發送 initialize 請求（JSON-RPC）：
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
+```
+
+3. 查看日誌：
+```bash
+tail -f /tmp/uad-lsp.log
+```
+
+### 與 VS Code 測試
+
+1. 打開 `uad-vscode` 目錄
+2. 按 F5 啟動擴展開發主機
+3. 打開 `.uad` 文件
+4. 查看 Output 面板 → "UAD Language Server"
+
+## 開發計劃
+
+### 階段 1: 基礎設施 ✅
+
+- [x] JSON-RPC 通訊層
+- [x] 文檔管理
+- [x] 基礎分析整合
+
+### 階段 2: Tier 1 功能 (2-3 週)
+
+- [ ] 完整診斷實作
+- [ ] 錯誤位置精確映射
+- [ ] 基礎補全（關鍵字）
+- [ ] 懸停提示（類型信息）
+
+### 階段 3: Tier 2 功能 (2-3 週)
+
+- [ ] 跳轉定義
+- [ ] 查找引用
+- [ ] 符號搜索
+
+### 階段 4: Tier 3 功能 (2-3 週)
+
+- [ ] 代碼格式化
+- [ ] 重命名
+- [ ] 代碼動作
+
+## 架構決策
+
+### 1. JSON-RPC 通訊
+
+使用標準 JSON-RPC 2.0 over stdio，與 VS Code 完全兼容。
+
+### 2. 文檔管理
+
+- 所有打開的文檔緩存在記憶體中
+- AST 緩存避免重複解析
+- 增量更新支持（TODO）
+
+### 3. 分析策略
+
+- 按需分析（didChange 時觸發）
+- 非阻塞分析（goroutine）
+- 結果緩存
+
+### 4. 錯誤處理
+
+- 優雅降級（部分功能失敗不影響其他功能）
+- 詳細日誌記錄
+
+## 性能考量
+
+### 當前狀態
+
+- 每次文檔變更都重新解析（簡單但低效）
+- 同步處理請求（可能阻塞）
+
+### 優化計劃
+
+1. **增量解析**: 只重新解析變更的部分
+2. **並發處理**: Goroutine 池處理請求
+3. **智能緩存**: AST、類型信息、符號表
+4. **延遲計算**: 只在需要時計算診斷
+
+## 故障排除
+
+### 問題: 伺服器無法啟動
+
+檢查：
+1. 二進制文件是否存在 (`./bin/uad-lsp`)
+2. PATH 環境變數
+3. 日誌文件權限
+
+### 問題: VS Code 連接失敗
+
+檢查：
+1. 伺服器路徑配置 (`uad.lsp.serverPath`)
+2. 擴展是否啟用 (`uad.lsp.enable`)
+3. 查看 VS Code 輸出面板
+
+### 問題: 診斷不顯示
+
+當前已知限制：診斷功能尚未完全實作。
+
+## 參考資源
+
+- [LSP Specification](https://microsoft.github.io/language-server-protocol/)
+- [LSP 實作指南](https://microsoft.github.io/language-server-protocol/implementors/servers/)
+- [gopls 源碼](https://github.com/golang/tools/tree/master/gopls) (參考實作)
+
+---
+
+*最後更新：2025-01-07*
+
+

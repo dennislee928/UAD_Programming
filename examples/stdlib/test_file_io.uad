@@ -1,0 +1,17 @@
+fn main() -> Int {
+    let filename = "test_output.txt";
+    let content = "UAD fin";
+    
+    let write_ok = write_file(filename, content);
+    println("Write file: OK");
+    
+    let exists = file_exists(filename);
+    println("File exists: OK");
+    
+    let read_content = read_file(filename);
+    println("Read content:");
+    println(read_content);
+    
+    return 0;
+}
+

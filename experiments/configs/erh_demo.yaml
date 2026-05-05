@@ -1,0 +1,102 @@
+# ERH Demo 實驗配置
+# 演示道德風險假說（Ethical Risk Hypothesis）分析
+
+name: "ERH Demo Experiment"
+description: "Demonstrates Ethical Risk Hypothesis analysis on synthetic action-decision data"
+version: "1.0"
+author: "UAD Research Team"
+created: "2025-01-01"
+
+# 場景配置
+scenario:
+  script: "experiments/scenarios/erh_demo.uad"
+  type: "erh_analysis"
+
+# 實驗參數
+parameters:
+  # ERH 分析參數
+  prime_threshold: 0.6          # Ethical Prime 閾值
+  fit_alpha_range: [10.0, 80.0] # Alpha 擬合範圍
+  
+  # 模擬參數
+  simulation_rounds: 1000       # 模擬回合數
+  action_pool_size: 500         # Action 池大小
+  
+  # 隨機性控制
+  random_seed: 42               # 隨機種子（可重現性）
+  
+  # Judge 配置
+  judge_type: "hybrid"          # human | model | pipeline | hybrid
+  judge_error_rate: 0.15        # 預期錯誤率
+  
+  # Action 生成參數
+  complexity_distribution: "log_normal"  # uniform | normal | log_normal
+  complexity_mean: 50.0
+  complexity_std: 15.0
+  importance_distribution: "beta"
+  importance_alpha: 2.0
+  importance_beta: 5.0
+
+# 輸出配置
+output:
+  format: "json"                # json | csv | yaml
+  directory: "experiments/results"
+  filename_template: "erh_demo_{timestamp}.json"
+  
+  # 要收集的指標
+  metrics:
+    - "ethical_primes"          # Ethical Prime 統計
+    - "error_distribution"      # 錯誤分布
+    - "alpha_estimate"          # Alpha 估計值
+    - "pi_function"             # Π(x) 函數
+    - "complexity_histogram"    # 複雜度直方圖
+    - "importance_histogram"    # 重要性直方圖
+  
+  # 是否生成視覺化
+  visualization: true
+  visualization_formats:
+    - "png"
+    - "svg"
+  
+  # 詳細程度
+  verbosity: "normal"           # quiet | normal | verbose | debug
+
+# 運行時配置
+runtime:
+  mode: "interpreter"           # interpreter | vm
+  timeout: 300                  # 秒
+  max_memory: 1024              # MB
+  enable_profiling: false       # 性能分析
+  enable_tracing: false         # 執行追蹤
+
+# 驗證配置
+validation:
+  # 預期結果範圍（用於回歸測試）
+  expected_alpha_range: [0.8, 1.2]
+  expected_prime_count_range: [100, 200]
+  max_error_rate: 0.25
+
+# 標籤（用於分類和搜索）
+tags:
+  - "erh"
+  - "demo"
+  - "synthetic_data"
+  - "baseline"
+
+# 依賴項
+dependencies:
+  uad_version: ">=0.1.0"
+  requires_extensions:
+    - "temporal"
+    - "resonance"
+
+# 註釋
+notes: |
+  這是一個基礎的 ERH 演示實驗，使用合成數據來展示：
+  1. Ethical Prime 的識別
+  2. Alpha 參數的估計
+  3. 錯誤分布分析
+  
+  適合作為理解 ERH 框架的入門實驗。
+
+

@@ -218,6 +218,12 @@ func (tc *TypeChecker) checkStmt(stmt ast.Stmt) {
 		
 	case *ast.BreakStmt, *ast.ContinueStmt:
 		// No type checking needed
+	
+	case *ast.EmitStmt:
+		tc.checkEmitStmt(s)
+	
+	case *ast.EntangleStmt:
+		tc.checkEntangleStmt(s)
 		
 	default:
 		tc.env.AddError(fmt.Sprintf("unknown statement type: %T", s), s.Span())
@@ -342,6 +348,52 @@ func (tc *TypeChecker) checkForStmt(stmt *ast.ForStmt) {
 	
 	// Check body
 	tc.checkBlockExpr(stmt.Body)
+}
+
+func (tc *TypeChecker) checkEmitStmt(stmt *ast.EmitStmt) {
+	// Check that the type name refers to a valid struct type
+	// For now, we'll do a simple check that the struct literal is well-formed
+	// Full implementation would verify against the struct definition
+	
+	// Check each field in the struct literal
+	for _, field := range stmt.Fields.Fields {
+		tc.checkExpr(field.Value)
+	}
+}
+
+func (tc *TypeChecker) checkEntangleStmt(stmt *ast.EntangleStmt) {
+	// Check that all variables exist and have compatible types
+	if len(stmt.Variables) < 2 {
+		tc.env.AddError("entangle requires at least 2 variables", stmt.Span())
+		return
+	}
+	
+	// Get the type of the first variable
+	firstVar := stmt.Variables[0]
+	firstSym, ok := tc.env.Lookup(firstVar.Name)
+	if !ok {
+		tc.env.AddError(fmt.Sprintf("undefined variable: %s", firstVar.Name), firstVar.Span())
+		return
+	}
+	firstType := firstSym.Type
+	
+	// Check that all other variables have the same type
+	for i := 1; i < len(stmt.Variables); i++ {
+		varIdent := stmt.Variables[i]
+		varSym, ok := tc.env.Lookup(varIdent.Name)
+		if !ok {
+			tc.env.AddError(fmt.Sprintf("undefined variable: %s", varIdent.Name), varIdent.Span())
+			continue
+		}
+		
+		if !firstType.Equals(varSym.Type) {
+			tc.env.AddError(
+				fmt.Sprintf("entangled variables must have the same type: %s has type %s, but %s has type %s",
+					firstVar.Name, firstType.String(), varIdent.Name, varSym.Type.String()),
+				varIdent.Span(),
+			)
+		}
+	}
 }
 
 // ==================== Expression Checking ====================

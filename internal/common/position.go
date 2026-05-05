@@ -118,3 +118,4 @@ func (s Span) Merge(other Span) Span {
 	return NewSpan(start, end, file)
 }
 
+

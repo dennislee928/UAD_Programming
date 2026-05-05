@@ -1,0 +1,120 @@
+// musical_score_simple.uad
+// Simplified Musical DSL example demonstrating score/track/bars/motif syntax
+// This version uses the currently supported syntax (no nested bars)
+
+// ============================================================================
+// Event Structure Definition
+// ============================================================================
+
+struct Event {
+    type: String,
+    target: String,
+    intensity: Int,
+}
+
+// ============================================================================
+// Motif Definitions - Reusable Temporal Patterns
+// ============================================================================
+
+// Basic reconnaissance motif
+motif reconnaissance {
+    emit Event {
+        type: "scan",
+        target: "network",
+        intensity: 3,
+    };
+    
+    emit Event {
+        type: "enumerate",
+        target: "services",
+        intensity: 2,
+    };
+}
+
+// Attack motif with parameters
+motif attack_pattern(severity: Int, target: String) {
+    emit Event {
+        type: "exploit",
+        severity: severity,
+        target: target,
+        intensity: 5,
+    };
+}
+
+// Defense motif
+motif defense_response(threat_level: Int) {
+    emit Event {
+        type: "block",
+        target: "threat",
+        intensity: threat_level,
+    };
+    
+    emit Event {
+        type: "alert",
+        target: "system",
+        intensity: 8,
+    };
+}
+
+// ============================================================================
+// Main Score - Multi-Track Cyber Simulation
+// ============================================================================
+
+score CyberSecuritySimulation {
+    tempo: 120,
+    
+    // Track 1: Red Team (Attacker)
+    track red_team {
+        // Bars 1-4: Initial Reconnaissance
+        bars 1..4 {
+            let scan_intensity: Int = 5;
+            emit Event {
+                type: "start_recon",
+                target: "network",
+                intensity: scan_intensity,
+            };
+        }
+        
+        // Bars 5-8: Active Attack Phase
+        bars 5..8 {
+            let attack_severity: Int = 8;
+            emit Event {
+                type: "launch_attack",
+                target: "database",
+                intensity: attack_severity,
+            };
+        }
+    }
+    
+    // Track 2: Blue Team (Defender)
+    track blue_team {
+        // Bars 1-4: Monitoring
+        bars 1..4 {
+            emit Event {
+                type: "monitor",
+                target: "system",
+                intensity: 3,
+            };
+        }
+        
+        // Bars 5-8: Response to Attack
+        bars 5..8 {
+            let threat_level: Int = 7;
+            emit Event {
+                type: "detect_threat",
+                target: "network",
+                intensity: threat_level,
+            };
+            emit Event {
+                type: "activate_defense",
+                target: "system",
+                intensity: 9,
+            };
+        }
+    }
+}
+
+fn main() {
+    print("Musical Score DSL - Cyber Security Simulation");
+    print("This demonstrates temporal coordination of multi-agent systems");
+}

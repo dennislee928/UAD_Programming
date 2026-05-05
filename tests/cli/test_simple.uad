@@ -1,0 +1,18 @@
+fn main() -> Int {
+    println("Test: simple arithmetic");
+    
+    let x = 10;
+    let y = 20;
+    let sum = x + y;
+    
+    if sum == 30 {
+        println("✓ Pass: 10 + 20 = 30");
+    } else {
+        println("✗ Fail: expected 30, got " + string(sum));
+        return 1;
+    }
+    
+    return 0;
+}
+
+

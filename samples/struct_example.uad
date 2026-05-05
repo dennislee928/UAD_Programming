@@ -1,0 +1,30 @@
+// 結構體範例
+struct Person {
+    name: String,
+    age: Int,
+}
+
+fn greet(p: Person) -> String {
+    return "Hello, " + p.name + "! You are " + p.age + " years old.";
+}
+
+fn is_adult(p: Person) -> Bool {
+    return p.age >= 18;
+}
+
+fn main() {
+    let alice = Person { name: "Alice", age: 25 };
+    let bob = Person { name: "Bob", age: 16 };
+    
+    println(greet(alice));
+    println(greet(bob));
+    
+    if is_adult(alice) {
+        println("Alice is an adult");
+    }
+    
+    if !is_adult(bob) {
+        println("Bob is not an adult");
+    }
+}
+

@@ -2,7 +2,4 @@ module github.com/dennislee928/uad-lang
 
 go 1.21
 
-require (
-	// Add dependencies as needed
-)
-
+require gopkg.in/yaml.v3 v3.0.1 // indirect

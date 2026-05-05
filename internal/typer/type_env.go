@@ -134,6 +134,20 @@ func (e *TypeEnv) initBuiltins() {
 		
 		// String functions
 		"len": NewFunctionType([]Type{StringType}, IntType),
+		"split": NewFunctionType([]Type{StringType, StringType}, NewArrayType(StringType)),
+		"join": NewFunctionType([]Type{NewArrayType(StringType), StringType}, StringType),
+		"trim": NewFunctionType([]Type{StringType}, StringType),
+		"contains": NewFunctionType([]Type{StringType, StringType}, BoolType),
+		"replace": NewFunctionType([]Type{StringType, StringType, StringType}, StringType),
+		
+		// File I/O
+		"read_file": NewFunctionType([]Type{StringType}, StringType),
+		"write_file": NewFunctionType([]Type{StringType, StringType}, BoolType),
+		"file_exists": NewFunctionType([]Type{StringType}, BoolType),
+		
+		// JSON
+		"json_parse": NewFunctionType([]Type{StringType}, StringType),
+		"json_stringify": NewFunctionType([]Type{StringType}, StringType),
 		
 		// Conversion functions
 		"int": NewFunctionType([]Type{FloatType}, IntType),

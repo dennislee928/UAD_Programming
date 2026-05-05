@@ -1,0 +1,15 @@
+// entanglement_test.uad
+// Minimal test for entanglement syntax
+
+fn test_entangle() {
+    let x: Int = 10;
+    let y: Int = 20;
+    entangle x, y;
+    print("Entangled x and y");
+}
+
+fn main() {
+    test_entangle();
+}
+
+

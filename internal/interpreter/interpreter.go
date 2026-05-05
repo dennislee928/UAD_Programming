@@ -5,6 +5,11 @@ import (
 	"math"
 	"strconv"
 
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/dennislee928/uad-lang/internal/ast"
 	"github.com/dennislee928/uad-lang/internal/typer"
 )
@@ -105,6 +110,32 @@ func (i *Interpreter) initBuiltins() {
 		
 		"string": NewBuiltinFunction("string", i.builtinString,
 			typer.NewFunctionType([]typer.Type{typer.IntType}, typer.StringType)),
+		
+		// File I/O
+		"read_file": NewBuiltinFunction("read_file", i.builtinReadFile,
+			typer.NewFunctionType([]typer.Type{typer.StringType}, typer.StringType)),
+		"write_file": NewBuiltinFunction("write_file", i.builtinWriteFile,
+			typer.NewFunctionType([]typer.Type{typer.StringType, typer.StringType}, typer.BoolType)),
+		"file_exists": NewBuiltinFunction("file_exists", i.builtinFileExists,
+			typer.NewFunctionType([]typer.Type{typer.StringType}, typer.BoolType)),
+		
+		// String operations
+		"split": NewBuiltinFunction("split", i.builtinSplit,
+			typer.NewFunctionType([]typer.Type{typer.StringType, typer.StringType}, typer.StringType)),
+		"join": NewBuiltinFunction("join", i.builtinJoin,
+			typer.NewFunctionType([]typer.Type{typer.StringType, typer.StringType}, typer.StringType)),
+		"trim": NewBuiltinFunction("trim", i.builtinTrim,
+			typer.NewFunctionType([]typer.Type{typer.StringType}, typer.StringType)),
+		"contains": NewBuiltinFunction("contains", i.builtinContains,
+			typer.NewFunctionType([]typer.Type{typer.StringType, typer.StringType}, typer.BoolType)),
+		"replace": NewBuiltinFunction("replace", i.builtinReplace,
+			typer.NewFunctionType([]typer.Type{typer.StringType, typer.StringType, typer.StringType}, typer.StringType)),
+		
+		// JSON
+		"json_parse": NewBuiltinFunction("json_parse", i.builtinJsonParse,
+			typer.NewFunctionType([]typer.Type{typer.StringType}, typer.StringType)),
+		"json_stringify": NewBuiltinFunction("json_stringify", i.builtinJsonStringify,
+			typer.NewFunctionType([]typer.Type{typer.StringType}, typer.StringType)),
 	}
 	
 	for name, fn := range builtins {
@@ -270,6 +301,268 @@ func (i *Interpreter) builtinString(interp *Interpreter, args []Value) (Value, e
 	return NewStringValue(ToString(args[0])), nil
 }
 
+// ==================== File I/O Built-ins ====================
+
+func (i *Interpreter) builtinReadFile(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("read_file expects 1 argument, got %d", len(args))
+	}
+	path, ok := args[0].(*StringValue)
+	if !ok {
+		return nil, fmt.Errorf("read_file expects string argument")
+	}
+	
+	content, err := ioutil.ReadFile(path.Value)
+	if err != nil {
+		return nil, fmt.Errorf("read_file: %v", err)
+	}
+	
+	return NewStringValue(string(content)), nil
+}
+
+func (i *Interpreter) builtinWriteFile(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("write_file expects 2 arguments, got %d", len(args))
+	}
+	path, ok1 := args[0].(*StringValue)
+	content, ok2 := args[1].(*StringValue)
+	if !ok1 || !ok2 {
+		return nil, fmt.Errorf("write_file expects string arguments")
+	}
+	
+	err := ioutil.WriteFile(path.Value, []byte(content.Value), 0644)
+	if err != nil {
+		return nil, fmt.Errorf("write_file: %v", err)
+	}
+	
+	return NewBoolValue(true), nil
+}
+
+func (i *Interpreter) builtinFileExists(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("file_exists expects 1 argument, got %d", len(args))
+	}
+	path, ok := args[0].(*StringValue)
+	if !ok {
+		return nil, fmt.Errorf("file_exists expects string argument")
+	}
+	
+	_, err := os.Stat(path.Value)
+	exists := !os.IsNotExist(err)
+	
+	return NewBoolValue(exists), nil
+}
+
+// ==================== String Operation Built-ins ====================
+
+func (i *Interpreter) builtinSplit(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("split expects 2 arguments, got %d", len(args))
+	}
+	str, ok1 := args[0].(*StringValue)
+	delim, ok2 := args[1].(*StringValue)
+	if !ok1 || !ok2 {
+		return nil, fmt.Errorf("split expects string arguments")
+	}
+	
+	parts := strings.Split(str.Value, delim.Value)
+	elements := make([]Value, len(parts))
+	for idx, part := range parts {
+		elements[idx] = NewStringValue(part)
+	}
+	
+	return NewArrayValue(elements, typer.StringType), nil
+}
+
+func (i *Interpreter) builtinJoin(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("join expects 2 arguments, got %d", len(args))
+	}
+	arr, ok := args[0].(*ArrayValue)
+	if !ok {
+		return nil, fmt.Errorf("join expects array as first argument")
+	}
+	sep, ok := args[1].(*StringValue)
+	if !ok {
+		return nil, fmt.Errorf("join expects string as second argument")
+	}
+	
+	parts := make([]string, len(arr.Elements))
+	for i, elem := range arr.Elements {
+		parts[i] = ToString(elem)
+	}
+	
+	result := strings.Join(parts, sep.Value)
+	return NewStringValue(result), nil
+}
+
+func (i *Interpreter) builtinTrim(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("trim expects 1 argument, got %d", len(args))
+	}
+	str, ok := args[0].(*StringValue)
+	if !ok {
+		return nil, fmt.Errorf("trim expects string argument")
+	}
+	
+	result := strings.TrimSpace(str.Value)
+	return NewStringValue(result), nil
+}
+
+func (i *Interpreter) builtinContains(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("contains expects 2 arguments, got %d", len(args))
+	}
+	str, ok1 := args[0].(*StringValue)
+	substr, ok2 := args[1].(*StringValue)
+	if !ok1 || !ok2 {
+		return nil, fmt.Errorf("contains expects string arguments")
+	}
+	
+	result := strings.Contains(str.Value, substr.Value)
+	return NewBoolValue(result), nil
+}
+
+func (i *Interpreter) builtinReplace(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 3 {
+		return nil, fmt.Errorf("replace expects 3 arguments, got %d", len(args))
+	}
+	str, ok1 := args[0].(*StringValue)
+	old, ok2 := args[1].(*StringValue)
+	new, ok3 := args[2].(*StringValue)
+	if !ok1 || !ok2 || !ok3 {
+		return nil, fmt.Errorf("replace expects string arguments")
+	}
+	
+	result := strings.ReplaceAll(str.Value, old.Value, new.Value)
+	return NewStringValue(result), nil
+}
+
+// ==================== JSON Built-ins ====================
+
+func (i *Interpreter) builtinJsonParse(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("json_parse expects 1 argument, got %d", len(args))
+	}
+	str, ok := args[0].(*StringValue)
+	if !ok {
+		return nil, fmt.Errorf("json_parse expects string argument")
+	}
+	
+	// Parse JSON to generic interface{}
+	var data interface{}
+	if err := json.Unmarshal([]byte(str.Value), &data); err != nil {
+		return nil, fmt.Errorf("json_parse: %v", err)
+	}
+	
+	// Convert to UAD value
+	return i.jsonToValue(data)
+}
+
+func (i *Interpreter) builtinJsonStringify(interp *Interpreter, args []Value) (Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("json_stringify expects 1 argument, got %d", len(args))
+	}
+	
+	// Convert UAD value to Go value
+	goValue := i.valueToGo(args[0])
+	
+	// Marshal to JSON
+	jsonBytes, err := json.Marshal(goValue)
+	if err != nil {
+		return nil, fmt.Errorf("json_stringify: %v", err)
+	}
+	
+	return NewStringValue(string(jsonBytes)), nil
+}
+
+// jsonToValue converts a Go interface{} (from JSON) to a UAD Value
+func (i *Interpreter) jsonToValue(data interface{}) (Value, error) {
+	switch v := data.(type) {
+	case nil:
+		return NewNilValue(), nil
+	
+	case bool:
+		return NewBoolValue(v), nil
+	
+	case float64:
+		// JSON numbers are always float64
+		if v == float64(int64(v)) {
+			return NewIntValue(int64(v)), nil
+		}
+		return NewFloatValue(v), nil
+	
+	case string:
+		return NewStringValue(v), nil
+	
+	case []interface{}:
+		// JSON array -> UAD array
+		elements := make([]Value, len(v))
+		for idx, elem := range v {
+			val, err := i.jsonToValue(elem)
+			if err != nil {
+				return nil, err
+			}
+			elements[idx] = val
+		}
+		// Use generic type for now
+		return NewArrayValue(elements, typer.StringType), nil
+	
+	case map[string]interface{}:
+		// JSON object -> UAD map
+		mapVal := NewMapValue(typer.StringType, typer.StringType)
+		for key, val := range v {
+			uadVal, err := i.jsonToValue(val)
+			if err != nil {
+				return nil, err
+			}
+			mapVal.Entries[key] = uadVal
+		}
+		return mapVal, nil
+	
+	default:
+		return nil, fmt.Errorf("unsupported JSON type: %T", v)
+	}
+}
+
+// valueToGo converts a UAD Value to a Go interface{} for JSON marshaling
+func (i *Interpreter) valueToGo(val Value) interface{} {
+	switch v := val.(type) {
+	case *NilValue:
+		return nil
+	
+	case *BoolValue:
+		return v.Value
+	
+	case *IntValue:
+		return v.Value
+	
+	case *FloatValue:
+		return v.Value
+	
+	case *StringValue:
+		return v.Value
+	
+	case *ArrayValue:
+		arr := make([]interface{}, len(v.Elements))
+		for idx, elem := range v.Elements {
+			arr[idx] = i.valueToGo(elem)
+		}
+		return arr
+	
+	case *MapValue:
+		m := make(map[string]interface{})
+		for key, val := range v.Entries {
+			m[key] = i.valueToGo(val)
+		}
+		return m
+	
+	default:
+		// Fallback to string representation
+		return val.String()
+	}
+}
+
 // ==================== Declaration Execution ====================
 
 func (i *Interpreter) execDecl(decl ast.Decl) error {
@@ -288,6 +581,28 @@ func (i *Interpreter) execDecl(decl ast.Decl) error {
 	case *ast.ImportDecl:
 		// Import handling is deferred to future implementation
 		// For now, imports are no-op (stdlib is pre-loaded)
+		return nil
+	// Musical DSL (M2.3)
+	case *ast.ScoreNode:
+		// Score declarations are registered but not executed until explicitly called
+		// For now, we just acknowledge them
+		return nil
+	case *ast.MotifDeclNode:
+		// Motif declarations are registered but not executed until used
+		// For now, we just acknowledge them
+		return nil
+	// String Theory (M2.4)
+	case *ast.StringDeclNode:
+		// String field declarations are registered in the runtime
+		return nil
+	case *ast.BraneDeclNode:
+		// Brane declarations are registered in the runtime
+		return nil
+	case *ast.CouplingNode:
+		// Coupling declarations define resonance relationships
+		return nil
+	case *ast.ResonanceRuleNode:
+		// Resonance rules are registered for evaluation
 		return nil
 	default:
 		return fmt.Errorf("unknown declaration type: %T", d)
@@ -341,6 +656,12 @@ func (i *Interpreter) execStmt(stmt ast.Stmt) error {
 	case *ast.ContinueStmt:
 		i.continueFlag = true
 		return nil
+	case *ast.EmitStmt:
+		return i.execEmitStmt(s)
+	case *ast.UseStmt:
+		return i.execUseStmt(s)
+	case *ast.EntangleStmt:
+		return i.execEntangleStmt(s)
 	default:
 		return fmt.Errorf("unknown statement type: %T", s)
 	}
@@ -513,6 +834,87 @@ func (i *Interpreter) execForStmt(stmt *ast.ForStmt) error {
 		}
 	}
 	
+	return nil
+}
+
+// execEmitStmt executes an emit statement.
+// For now, this evaluates the event struct and prints it.
+func (i *Interpreter) execEmitStmt(stmt *ast.EmitStmt) error {
+	// Evaluate the struct literal to create the event value
+	eventValue, err := i.evalStructLiteral(stmt.Fields)
+	if err != nil {
+		return err
+	}
+
+	// Format and output the event
+	// For now, we'll print the event information
+	structVal, ok := eventValue.(*StructValue)
+	if !ok {
+		return fmt.Errorf("emit statement requires a struct value")
+	}
+
+	// Build event string representation
+	var fields []string
+	for fieldName, fieldValue := range structVal.Fields {
+		fields = append(fields, fmt.Sprintf("%s: %s", fieldName, ToString(fieldValue)))
+	}
+
+	eventStr := fmt.Sprintf("[Event: %s] %s", stmt.TypeName.Name, strings.Join(fields, ", "))
+	fmt.Println(eventStr)
+
+	return nil
+}
+
+func (i *Interpreter) execEntangleStmt(stmt *ast.EntangleStmt) error {
+	// Entanglement creates a shared state among multiple variables
+	// For now, this is a placeholder that acknowledges the statement
+	// Full implementation would involve the EntanglementManager from runtime
+	
+	varNames := make([]string, len(stmt.Variables))
+	for idx, varIdent := range stmt.Variables {
+		varNames[idx] = varIdent.Name
+	}
+	
+	fmt.Printf("[Entangle] Variables: %s\n", strings.Join(varNames, ", "))
+	
+	// TODO(M2.5): Integrate with runtime.EntanglementManager
+	// - Create or join an entanglement group
+	// - Bind all variables to share the same backing value
+	// - Ensure type compatibility
+	
+	return nil
+}
+
+// execUseStmt executes a use statement for calling motifs.
+// For now, this is a placeholder that acknowledges the statement.
+func (i *Interpreter) execUseStmt(stmt *ast.UseStmt) error {
+	// Evaluate arguments if any
+	argValues := make([]Value, len(stmt.Args))
+	for idx, arg := range stmt.Args {
+		val, err := i.evalExpr(arg)
+		if err != nil {
+			return err
+		}
+		argValues[idx] = val
+	}
+
+	// Format arguments for output
+	argStrs := make([]string, len(argValues))
+	for idx, val := range argValues {
+		argStrs[idx] = ToString(val)
+	}
+
+	if len(argStrs) > 0 {
+		fmt.Printf("[Use Motif] %s(%s)\n", stmt.MotifName.Name, strings.Join(argStrs, ", "))
+	} else {
+		fmt.Printf("[Use Motif] %s\n", stmt.MotifName.Name)
+	}
+
+	// TODO(M2.3): Implement full motif execution
+	// - Look up motif in registry
+	// - Bind parameters to arguments
+	// - Execute motif body in current context
+
 	return nil
 }
 

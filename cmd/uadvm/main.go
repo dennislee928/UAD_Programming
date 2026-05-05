@@ -39,3 +39,4 @@ func run(path string) error {
 	return fmt.Errorf("VM not yet implemented - Phase 2 in progress")
 }
 
+

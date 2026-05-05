@@ -1,0 +1,108 @@
+// UAD Standard Library - File I/O Example
+//
+// This example demonstrates file I/O operations
+
+fn main() -> Int {
+    println("=== UAD File I/O Demo ===");
+    println("");
+    
+    // ========== Write File ==========
+    println("--- Writing Files ---");
+    
+    let content = "Hello, UAD!\nThis is a test file.\nLine 3.";
+    let success = write_file("test_output.txt", content);
+    
+    if success {
+        println("✓ File written successfully");
+    }
+    
+    // ========== Read File ==========
+    println("");
+    println("--- Reading Files ---");
+    
+    if file_exists("test_output.txt") {
+        let file_content = read_file("test_output.txt");
+        println("File content:");
+        println(file_content);
+        
+        let size = file_size("test_output.txt");
+        println("File size: " + string(size) + " bytes");
+    }
+    
+    // ========== Read Lines ==========
+    println("");
+    println("--- Reading Lines ---");
+    
+    let lines = read_lines("test_output.txt");
+    println("Number of lines: " + string(len(lines)));
+    
+    let line_num = 1;
+    for line in lines {
+        println("Line " + string(line_num) + ": " + line);
+        line_num = line_num + 1;
+    }
+    
+    // ========== Append File ==========
+    println("");
+    println("--- Appending to File ---");
+    
+    append_file("test_output.txt", "\nAppended line 4.");
+    append_file("test_output.txt", "\nAppended line 5.");
+    
+    let updated_lines = read_lines("test_output.txt");
+    println("Lines after append: " + string(len(updated_lines)));
+    
+    // ========== Process Log File ==========
+    println("");
+    println("--- Log File Processing ---");
+    
+    // Create sample log
+    let log_content = "INFO: Application started
+ERROR: Connection failed
+WARN: Retrying connection
+INFO: Connection established
+ERROR: Database timeout
+INFO: Request processed";
+    
+    write_file("app.log", log_content);
+    
+    // Count errors
+    let log_lines = read_lines("app.log");
+    let error_count = 0;
+    let warn_count = 0;
+    
+    for log_line in log_lines {
+        if contains(log_line, "ERROR") {
+            error_count = error_count + 1;
+            println("Error: " + log_line);
+        } else if contains(log_line, "WARN") {
+            warn_count = warn_count + 1;
+        }
+    }
+    
+    println("");
+    println("Log analysis:");
+    println("  Errors: " + string(error_count));
+    println("  Warnings: " + string(warn_count));
+    
+    // ========== Cleanup ==========
+    println("");
+    println("--- Cleanup ---");
+    
+    if file_exists("test_output.txt") {
+        delete_file("test_output.txt");
+        println("✓ test_output.txt deleted");
+    }
+    
+    if file_exists("app.log") {
+        delete_file("app.log");
+        println("✓ app.log deleted");
+    }
+    
+    println("");
+    println("=== Demo Complete ===");
+    
+    return 0;
+}
+
+

@@ -1,0 +1,181 @@
+// ERH Demo - 道德風險假說演示
+// 此腳本生成合成數據並進行 ERH 分析
+
+// 導入標準庫
+// import stdlib.random;
+// import stdlib.statistics;
+
+// Action 生成器
+struct ActionGenerator {
+    seed: Int,
+    complexity_mean: Float,
+    complexity_std: Float,
+}
+
+// Judge 模擬器
+struct JudgeSimulator {
+    error_rate: Float,
+    bias: Float,
+}
+
+// 生成隨機 Action
+fn generate_action(gen: ActionGenerator, id: Int) -> Action {
+    // 使用對數正態分布生成複雜度
+    let complexity = gen.complexity_mean + (id as Float * 0.1) % gen.complexity_std;
+    
+    // 使用 Beta 分布生成重要性
+    let importance = (id as Float * 0.17) % 1.0;
+    
+    // 真實值（二元：好/壞）
+    let true_value = if complexity > 50.0 && importance > 0.7 {
+        -1.0  // 高風險
+    } else {
+        1.0   // 低風險
+    };
+    
+    return Action {
+        id: "action_" + string(id),
+        complexity: complexity,
+        true_value: true_value,
+        importance: importance,
+    };
+}
+
+// 模擬 Judge 的決策
+fn simulate_judge(action: Action, judge: JudgeSimulator) -> Judge {
+    // 基本決策：基於複雜度的簡單規則
+    let base_decision = if action.complexity > 60.0 {
+        -1.0  // 拒絕
+    } else {
+        1.0   // 接受
+    };
+    
+    // 添加錯誤（以一定機率翻轉決策）
+    let decision = if (action.complexity * 13.0) % 100.0 < judge.error_rate * 100.0 {
+        -base_decision  // 翻轉
+    } else {
+        base_decision
+    };
+    
+    return Judge {
+        kind: JudgeKind::Model,
+        decision: decision,
+    };
+}
+
+// 計算錯誤
+fn calculate_error(action: Action, judge: Judge) -> Float {
+    return abs(judge.decision - action.true_value);
+}
+
+// 判斷是否為 Mistake
+fn is_mistake(action: Action, judge: Judge, threshold: Float) -> Bool {
+    let error = calculate_error(action, judge);
+    return error > threshold;
+}
+
+// 判斷是否為 Ethical Prime
+fn is_ethical_prime(action: Action, judge: Judge, threshold: Float) -> Bool {
+    // Ethical Prime 定義：
+    // 1. 是一個 Mistake
+    // 2. 重要性在前 10% (importance >= 0.9)
+    // 3. 複雜度滿足條件 (complexity >= 40.0)
+    
+    if !is_mistake(action, judge, threshold) {
+        return false;
+    }
+    
+    if action.importance < 0.9 {
+        return false;
+    }
+    
+    if action.complexity < 40.0 {
+        return false;
+    }
+    
+    return true;
+}
+
+// 主實驗函數
+fn main() -> Int {
+    println("=== ERH Demo Experiment ===");
+    println("");
+    
+    // 初始化
+    let generator = ActionGenerator {
+        seed: 42,
+        complexity_mean: 50.0,
+        complexity_std: 15.0,
+    };
+    
+    let judge_simulator = JudgeSimulator {
+        error_rate: 0.15,
+        bias: 0.0,
+    };
+    
+    let prime_threshold = 0.6;
+    let rounds = 1000;
+    
+    // 統計變數
+    let mut total_mistakes = 0;
+    let mut total_primes = 0;
+    let mut total_error = 0.0;
+    
+    println("Running " + string(rounds) + " rounds...");
+    println("");
+    
+    // 模擬循環
+    let mut round = 0;
+    while round < rounds {
+        // 生成 Action
+        let action = generate_action(generator, round);
+        
+        // 模擬 Judge 決策
+        let judge = simulate_judge(action, judge_simulator);
+        
+        // 計算錯誤
+        let error = calculate_error(action, judge);
+        total_error = total_error + error;
+        
+        // 檢查 Mistake
+        if is_mistake(action, judge, prime_threshold) {
+            total_mistakes = total_mistakes + 1;
+        }
+        
+        // 檢查 Ethical Prime
+        if is_ethical_prime(action, judge, prime_threshold) {
+            total_primes = total_primes + 1;
+        }
+        
+        // 每 100 輪輸出一次進度
+        if (round + 1) % 100 == 0 {
+            println("Round " + string(round + 1) + "/" + string(rounds) + " completed");
+        }
+        
+        round = round + 1;
+    }
+    
+    // 輸出結果
+    println("");
+    println("=== Results ===");
+    println("Total Rounds: " + string(rounds));
+    println("Total Mistakes: " + string(total_mistakes));
+    println("Total Ethical Primes: " + string(total_primes));
+    println("Mistake Rate: " + string(float(total_mistakes) / float(rounds)));
+    println("Prime Rate: " + string(float(total_primes) / float(rounds)));
+    println("Average Error: " + string(total_error / float(rounds)));
+    println("");
+    
+    // 估計 Alpha
+    // 簡化版：Alpha ≈ log(Primes) / log(Complexity)
+    // 實際應使用對數線性回歸
+    let alpha_estimate = 0.85;  // 佔位符
+    println("Estimated Alpha: " + string(alpha_estimate));
+    
+    println("");
+    println("=== Experiment Complete ===");
+    
+    return 0;
+}
+
+

@@ -1,0 +1,19 @@
+// Fibonacci example demonstrating recursion
+fn fibonacci(n: Int) -> Int {
+  if n <= 1 {
+    return n;
+  } else {
+    return fibonacci(n - 1) + fibonacci(n - 2);
+  }
+}
+
+fn main() {
+  println("Fibonacci sequence:");
+  let i = 0;
+  while i < 10 {
+    let fib = fibonacci(i);
+    println("fib(0) = 0");
+    i = i + 1;
+  }
+}
+

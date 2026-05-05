@@ -1,0 +1,133 @@
+// UAD Language Test File
+// This file demonstrates syntax highlighting
+
+// Core language features
+fn fibonacci(n: Int) -> Int {
+    if n <= 1 {
+        return n;
+    } else {
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}
+
+// Struct definition
+struct Point {
+    x: Float,
+    y: Float,
+}
+
+// Enum with variants
+enum Result {
+    Ok(Int),
+    Err(String),
+}
+
+// Musical DSL (M2.3)
+score GameSimulation {
+    tempo: 120,
+    time_signature: 4/4,
+    
+    track Player {
+        bars 1..4 {
+            motif attack;
+        }
+        bars 5..8 {
+            use motif defense at bars 5..6;
+        }
+    }
+    
+    track Enemy {
+        bars 1..8 {
+            motif patrol;
+        }
+    }
+}
+
+motif attack {
+    duration: 4 beats,
+    actions: [
+        "scan",
+        "target",
+        "fire"
+    ]
+}
+
+// String Theory Semantics (M2.4)
+string EthicalField {
+    modes {
+        integrity: Float,
+        transparency: Float,
+        accountability: Float,
+    }
+}
+
+brane SystemContext {
+    dimensions [time, space, ethics]
+}
+
+string EthicalField on SystemContext
+
+coupling EthicalField.integrity {
+    mode_pair (integrity, accountability) with strength 0.8;
+}
+
+resonance when
+    freq(EthicalField.integrity) ≈ freq(SystemField.stability)
+    and amplitude > 0.7
+{
+    mark "High ethical coherence detected";
+}
+
+// Entanglement (M2.5)
+fn test_entanglement() -> Int {
+    let x: Int = 10;
+    let y: Int = 20;
+    let z: Int = 30;
+    
+    // Entangle variables
+    entangle x, y, z;
+    
+    // Now x, y, z share the same value
+    x = 42;
+    // y and z are also 42
+    
+    return y + z; // 84
+}
+
+// Pattern matching
+fn classify_result(r: Result) -> String {
+    match r {
+        Ok(value) => "Success: " + string(value),
+        Err(msg) => "Error: " + msg,
+    }
+}
+
+// Main function
+fn main() -> Int {
+    println("=== UAD Language Demo ===");
+    println("");
+    
+    // Test fibonacci
+    let fib10 = fibonacci(10);
+    println("Fibonacci(10) = " + string(fib10));
+    
+    // Test struct
+    let p = Point { x: 3.0, y: 4.0 };
+    println("Point: (" + string(p.x) + ", " + string(p.y) + ")");
+    
+    // Test entanglement
+    let entangled_sum = test_entanglement();
+    println("Entangled sum: " + string(entangled_sum));
+    
+    // Test pattern matching
+    let result = Ok(42);
+    let message = classify_result(result);
+    println(message);
+    
+    println("");
+    println("=== Demo Complete ===");
+    
+    return 0;
+}
+
+

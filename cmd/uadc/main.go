@@ -53,3 +53,4 @@ func compile(inPath, outPath, mode string) error {
 	return fmt.Errorf("compiler not yet implemented - Phase 1 in progress")
 }
 
+

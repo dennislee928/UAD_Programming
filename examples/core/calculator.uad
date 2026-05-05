@@ -28,3 +28,4 @@ fn main() {
     println("Midpoint: (" + mid.x + ", " + mid.y + ")");
 }
 
+

@@ -199,3 +199,4 @@ func Errorf(kind ErrorKind, span Span, format string, args ...interface{}) *Erro
 	return NewError(kind, fmt.Sprintf(format, args...), span)
 }
 
+

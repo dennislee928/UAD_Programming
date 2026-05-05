@@ -1,0 +1,436 @@
+// ransomware_killchain.uad
+// A comprehensive ransomware attack kill-chain simulation using UAD's Musical DSL
+// This demonstrates UAD's strength in modeling temporal attack sequences
+
+// ============================================================================
+// Phase 1: Attack Motifs (Reusable Attack Patterns)
+// ============================================================================
+
+// Initial reconnaissance motif
+motif reconnaissance_phase {
+    emit Event {
+        type: "network_scan",
+        phase: "recon",
+        stealth_level: 8,
+    };
+    
+    emit Event {
+        type: "port_scan",
+        phase: "recon",
+        target_ports: [22, 80, 443, 3389],
+    };
+    
+    emit Event {
+        type: "vulnerability_scan",
+        phase: "recon",
+        cve_count: 3,
+    };
+}
+
+// Initial access and exploitation motif
+motif initial_access(attack_vector: String) {
+    match attack_vector {
+        "phishing" => {
+            emit Event {
+                type: "phishing_email",
+                phase: "initial_access",
+                success_rate: 0.15,
+            };
+            
+            emit Event {
+                type: "payload_execution",
+                phase: "initial_access",
+                payload_type: "macro",
+            };
+        },
+        "rdp_bruteforce" => {
+            emit Event {
+                type: "rdp_connection_attempt",
+                phase: "initial_access",
+                attempt_count: 1000,
+            };
+            
+            emit Event {
+                type: "credential_theft",
+                phase: "initial_access",
+                method: "keylogger",
+            };
+        },
+        "exploit" => {
+            emit Event {
+                type: "exploit_execution",
+                phase: "initial_access",
+                cve: "CVE-2021-34527",
+            };
+        },
+        _ => {
+            emit Event {
+                type: "unknown_attack",
+                phase: "initial_access",
+            };
+        },
+    }
+}
+
+// Persistence establishment motif
+motif establish_persistence {
+    emit Event {
+        type: "registry_modification",
+        phase: "persistence",
+        key: "Run",
+    };
+    
+    emit Event {
+        type: "scheduled_task_creation",
+        phase: "persistence",
+        task_name: "WindowsUpdate",
+    };
+    
+    emit Event {
+        type: "service_installation",
+        phase: "persistence",
+        service_name: "SystemService",
+    };
+}
+
+// Privilege escalation motif
+motif privilege_escalation {
+    emit Event {
+        type: "token_manipulation",
+        phase: "privilege_escalation",
+        target_level: "SYSTEM",
+    };
+    
+    emit Event {
+        type: "uac_bypass",
+        phase: "privilege_escalation",
+        method: "eventvwr",
+    };
+}
+
+// Defense evasion motif
+motif defense_evasion {
+    emit Event {
+        type: "process_hollowing",
+        phase: "defense_evasion",
+        target_process: "svchost.exe",
+    };
+    
+    emit Event {
+        type: "amsi_bypass",
+        phase: "defense_evasion",
+        technique: "patch",
+    };
+    
+    emit Event {
+        type: "log_deletion",
+        phase: "defense_evasion",
+        log_types: ["Security", "System"],
+    };
+}
+
+// Credential access motif
+motif credential_access {
+    emit Event {
+        type: "lsass_dump",
+        phase: "credential_access",
+        method: "procdump",
+    };
+    
+    emit Event {
+        type: "sam_extraction",
+        phase: "credential_access",
+    };
+    
+    emit Event {
+        type: "kerberos_ticket_theft",
+        phase: "credential_access",
+    };
+}
+
+// Discovery and lateral movement motif
+motif lateral_movement {
+    emit Event {
+        type: "network_enumeration",
+        phase: "lateral_movement",
+        scope: "subnet",
+    };
+    
+    emit Event {
+        type: "remote_service_execution",
+        phase: "lateral_movement",
+        protocol: "SMB",
+    };
+    
+    emit Event {
+        type: "remote_registry_access",
+        phase: "lateral_movement",
+    };
+}
+
+// Collection and exfiltration motif
+motif data_collection {
+    emit Event {
+        type: "file_enumeration",
+        phase: "collection",
+        target_extensions: [".pdf", ".docx", ".xlsx", ".db"],
+    };
+    
+    emit Event {
+        type: "data_compression",
+        phase: "collection",
+        archive_format: "zip",
+    };
+    
+    emit Event {
+        type: "data_exfiltration",
+        phase: "collection",
+        method: "https",
+        destination: "C2_SERVER",
+    };
+}
+
+// Ransomware deployment motif
+motif ransomware_deployment {
+    emit Event {
+        type: "ransomware_drop",
+        phase: "impact",
+        file_name: "encryptor.exe",
+    };
+    
+    emit Event {
+        type: "file_encryption",
+        phase: "impact",
+        algorithm: "AES-256",
+        files_encrypted: 10000,
+    };
+    
+    emit Event {
+        type: "ransom_note_deployment",
+        phase: "impact",
+        note_type: "README.txt",
+    };
+    
+    emit Event {
+        type: "c2_communication",
+        phase: "impact",
+        purpose: "key_exchange",
+    };
+}
+
+// ============================================================================
+// Phase 2: Defender Response Motifs
+// ============================================================================
+
+// Detection and alerting motif
+motif detection_phase(alert_threshold: Int) {
+    emit Event {
+        type: "siem_alert",
+        phase: "detection",
+        severity: alert_threshold,
+    };
+    
+    emit Event {
+        type: "edr_trigger",
+        phase: "detection",
+        rule: "suspicious_process",
+    };
+}
+
+// Response and containment motif
+motif response_phase(severity: Int) {
+    if severity > 7 {
+        emit Event {
+            type: "network_isolation",
+            phase: "response",
+            action: "quarantine",
+        };
+        
+        emit Event {
+            type: "endpoint_isolation",
+            phase: "response",
+            action: "disconnect",
+        };
+    } else {
+        emit Event {
+            type: "monitoring_enhancement",
+            phase: "response",
+            action: "increase_logging",
+        };
+    }
+}
+
+// ============================================================================
+// Phase 3: Complete Kill-Chain Score
+// ============================================================================
+
+score RansomwareAttackSimulation {
+    // Attacker Timeline - Full Kill Chain
+    track attacker {
+        // Bars 1-2: Reconnaissance
+        bars 1..2 {
+            use reconnaissance_phase;
+        }
+        
+        // Bars 3-4: Initial Access
+        bars 3..4 {
+            use initial_access("phishing");
+        }
+        
+        // Bars 5-6: Execution and Persistence
+        bars 5..6 {
+            use establish_persistence;
+        }
+        
+        // Bars 7-8: Privilege Escalation
+        bars 7..8 {
+            use privilege_escalation;
+        }
+        
+        // Bars 9-10: Defense Evasion
+        bars 9..10 {
+            use defense_evasion;
+        }
+        
+        // Bars 11-12: Credential Access
+        bars 11..12 {
+            use credential_access;
+        }
+        
+        // Bars 13-16: Lateral Movement
+        bars 13..16 {
+            use lateral_movement;
+        }
+        
+        // Bars 17-18: Collection
+        bars 17..18 {
+            use data_collection;
+        }
+        
+        // Bars 19-20: Impact (Ransomware Deployment)
+        bars 19..20 {
+            use ransomware_deployment;
+        }
+    }
+    
+    // Defender Timeline - Response
+    track defender {
+        // Bars 1-10: Monitoring (No alerts)
+        bars 1..10 {
+            emit Event {
+                type: "baseline_monitoring",
+                phase: "monitoring",
+                alert_count: 0,
+            };
+        }
+        
+        // Bars 11-12: First Detection
+        bars 11..12 {
+            use detection_phase(6);
+        }
+        
+        // Bars 13-14: Enhanced Monitoring
+        bars 13..14 {
+            use detection_phase(8);
+        }
+        
+        // Bars 15-16: Response Initiation
+        bars 15..16 {
+            use response_phase(8);
+        }
+        
+        // Bars 17-18: Containment
+        bars 17..18 {
+            emit Event {
+                type: "threat_hunting",
+                phase: "response",
+                scope: "network_wide",
+            };
+        }
+        
+        // Bars 19-20: Recovery and Investigation
+        bars 19..20 {
+            emit Event {
+                type: "forensic_analysis",
+                phase: "recovery",
+            };
+            
+            emit Event {
+                type: "backup_restoration",
+                phase: "recovery",
+            };
+        }
+    }
+    
+    // System State Timeline
+    track system_state {
+        bars 1..10 {
+            emit Event {
+                type: "system_healthy",
+                phase: "normal",
+                risk_score: 2,
+            };
+        }
+        
+        bars 11..14 {
+            emit Event {
+                type: "system_degraded",
+                phase: "compromised",
+                risk_score: 6,
+            };
+        }
+        
+        bars 15..18 {
+            emit Event {
+                type: "system_critical",
+                phase: "under_attack",
+                risk_score: 9,
+            };
+        }
+        
+        bars 19..20 {
+            emit Event {
+                type: "system_recovering",
+                phase: "recovery",
+                risk_score: 4,
+            };
+        }
+    }
+}
+
+// ============================================================================
+// Main Execution
+// ============================================================================
+
+fn main() {
+    println("=========================================");
+    println("Ransomware Kill-Chain Simulation");
+    println("=========================================");
+    println("");
+    println("This simulation demonstrates:");
+    println("1. Complete MITRE ATT&CK kill-chain");
+    println("2. Temporal coordination using Musical DSL");
+    println("3. Multi-track orchestration (Attacker/Defender/System)");
+    println("4. Reusable attack motifs");
+    println("");
+    println("Kill-Chain Phases:");
+    println("  Bars 1-2:   Reconnaissance");
+    println("  Bars 3-4:   Initial Access");
+    println("  Bars 5-6:   Persistence");
+    println("  Bars 7-8:   Privilege Escalation");
+    println("  Bars 9-10:  Defense Evasion");
+    println("  Bars 11-12: Credential Access");
+    println("  Bars 13-16: Lateral Movement");
+    println("  Bars 17-18: Collection");
+    println("  Bars 19-20: Impact (Ransomware)");
+    println("");
+    println("Status: Parser ✅ | Runtime ⚠️ Partial");
+    println("");
+    println("To fully execute, the runtime needs:");
+    println("- Complete TemporalGrid implementation");
+    println("- Motif instantiation system");
+    println("- Event queue processing");
+    println("- Multi-track synchronization");
+}
+
+

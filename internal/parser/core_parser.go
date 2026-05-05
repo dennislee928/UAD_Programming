@@ -190,7 +190,15 @@ func (p *Parser) parseFieldList() ([]*ast.Field, error) {
 	
 	for !p.check(lexer.TokenRBrace) && !p.isAtEnd() {
 		start := p.current().Span.Start
-		name := p.parseIdent()
+		// Allow keywords as field names (e.g., "type" as a field name)
+		var name *ast.Ident
+		if p.check(lexer.TokenIdent) {
+			name = p.parseIdent()
+		} else if lexer.IsKeyword(p.current().Type) {
+			tok := p.current()
+			p.advance()
+			name = ast.NewIdent(tok.Lexeme, tok.Span)
+		}
 		if name == nil {
 			return nil, p.error("expected field name")
 		}
@@ -866,7 +874,18 @@ func (p *Parser) parseStructLiteralWithName(name *ast.Ident) (ast.Expr, error) {
 	
 	for !p.check(lexer.TokenRBrace) && !p.isAtEnd() {
 		fieldStart := p.current().Span.Start
-		fieldName := p.parseIdent()
+		// In struct literals, keywords can be used as field names
+		var fieldName *ast.Ident
+		if p.check(lexer.TokenIdent) {
+			fieldName = p.parseIdent()
+		} else {
+			// Try to parse keyword as identifier (e.g., "type" as field name)
+			tok := p.current()
+			if lexer.IsKeyword(tok.Type) {
+				p.advance()
+				fieldName = ast.NewIdent(tok.Lexeme, tok.Span)
+			}
+		}
 		if fieldName == nil {
 			return nil, p.error("expected field name")
 		}
@@ -1058,6 +1077,11 @@ func (p *Parser) parseBlockExpr() (*ast.BlockExpr, error) {
 	var finalExpr ast.Expr
 	
 	for !p.check(lexer.TokenRBrace) && !p.isAtEnd() {
+		// Skip comments
+		if p.match(lexer.TokenComment) {
+			continue
+		}
+		
 		// Check if this is a statement keyword
 		if p.isStmtStart() {
 			stmt, err := p.parseStmt()
@@ -1247,7 +1271,11 @@ func (p *Parser) isStmtStart() bool {
 		p.check(lexer.TokenWhile) ||
 		p.check(lexer.TokenFor) ||
 		p.check(lexer.TokenBreak) ||
-		p.check(lexer.TokenContinue)
+		p.check(lexer.TokenContinue) ||
+		p.check(lexer.TokenEmit) ||
+		p.check(lexer.TokenEntangle) ||
+		p.check(lexer.TokenUse) ||
+		p.check(lexer.TokenBars)
 }
 
 func (p *Parser) current() lexer.Token {

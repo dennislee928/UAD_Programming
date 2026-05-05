@@ -1,0 +1,104 @@
+// all_dsl_features.uad
+// Comprehensive example demonstrating all three advanced DSL features:
+// - Musical DSL (M2.3): score, track, bars, motif, emit
+// - String Theory (M2.4): string, brane, coupling, resonance
+// - Entanglement (M2.5): entangle
+
+// ============================================================================
+// Event Structure Definition
+// ============================================================================
+
+struct Event {
+    type: String,
+    target: String,
+    intensity: Int,
+}
+
+// ============================================================================
+// Musical DSL (M2.3) - Temporal Coordination
+// ============================================================================
+
+motif scan_pattern {
+    emit Event {
+        type: "scan",
+        target: "network",
+        intensity: 3,
+    };
+}
+
+score CyberOps {
+    tempo: 120,
+    
+    track attacker {
+        bars 1..2 {
+            let intensity: Int = 5;
+            emit Event {
+                type: "probe",
+                target: "target",
+                intensity: intensity,
+            };
+        }
+    }
+}
+
+// ============================================================================
+// String Theory (M2.4) - Field Coupling
+// ============================================================================
+
+string ThreatField {
+    modes {
+        severity: Float,
+        frequency: Float,
+    }
+}
+
+string DefenseField {
+    modes {
+        strength: Float,
+        frequency: Float,
+    }
+}
+
+brane CyberSpace {
+    dimensions [x, y, z]
+}
+
+coupling ThreatField.frequency DefenseField.frequency with strength 0.9
+
+resonance when ThreatField.severity > 50.0 {
+    print("Critical threat level detected!");
+}
+
+// ============================================================================
+// Entanglement (M2.5) - Shared State
+// ============================================================================
+
+fn demonstrate_entanglement() {
+    let sensor_a: Int = 100;
+    let sensor_b: Int = 100;
+    let sensor_c: Int = 100;
+    
+    entangle sensor_a, sensor_b, sensor_c;
+    
+    print("Sensors entangled - they now share quantum state");
+}
+
+// ============================================================================
+// Main Function
+// ============================================================================
+
+fn main() {
+    print("==========================================================");
+    print("UAD Language - Advanced DSL Features Demonstration");
+    print("==========================================================");
+    print("");
+    print("✓ Musical DSL (M2.3): Temporal coordination");
+    print("✓ String Theory (M2.4): Field coupling and resonance");
+    print("✓ Entanglement (M2.5): Quantum-inspired shared state");
+    print("");
+    
+    demonstrate_entanglement();
+    
+    print("");
+    print("All advanced DSL features are now integrated!");
+}

@@ -1,0 +1,18 @@
+// emit_simple_test.uad
+// Simple test for emit statement
+
+// Define Event struct
+struct Event {
+    type: String,
+    target: String,
+}
+
+fn main() {
+    emit Event {
+        type: "test",
+        target: "example",
+    };
+    println("Emit test completed");
+}
+
+

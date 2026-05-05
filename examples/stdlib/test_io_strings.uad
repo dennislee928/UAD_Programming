@@ -1,0 +1,59 @@
+// 簡化版測試 - 文件 I/O 和字串操作
+
+fn main() -> Int {
+    println("=== 測試文件 I/O 和字串操作 ===");
+    println("");
+    
+    // 測試字串操作
+    println("--- 字串操作 ---");
+    
+    let text = "Hello,UAD,Language";
+    println("原始文本: " + text);
+    
+    let words = split(text, ",");
+    println("分割結果 (應該是 3 個元素):");
+    
+    // 測試 contains
+    if contains(text, "UAD") {
+        println("✓ 包含 'UAD'");
+    }
+    
+    // 測試 trim
+    let padded = "  spaced  ";
+    let trimmed = trim(padded);
+    println("trim 測試: '" + padded + "' -> '" + trimmed + "'");
+    
+    // 測試 replace
+    let template = "Hello {{name}}!";
+    let result = replace(template, "{{name}}", "World");
+    println("replace 測試: " + result);
+    
+    // 測試文件 I/O
+    println("");
+    println("--- 文件 I/O ---");
+    
+    let filename = "test_temp.txt";
+    let content = "Test content from UAD!";
+    
+    // 寫入文件
+    let write_ok = write_file(filename, content);
+    if write_ok {
+        println("✓ 文件寫入成功");
+    }
+    
+    // 檢查文件存在
+    if file_exists(filename) {
+        println("✓ 文件存在");
+        
+        // 讀取文件
+        let read_content = read_file(filename);
+        println("讀取內容: " + read_content);
+    }
+    
+    println("");
+    println("=== 測試完成 ===");
+    
+    return 0;
+}
+
+

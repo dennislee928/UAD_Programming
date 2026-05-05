@@ -1,0 +1,235 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v0.1.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v0.1.0)'
+        required: true
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: amd64
+            goos: linux
+            goarch: amd64
+          - os: macos-latest
+            arch: amd64
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            arch: arm64
+            goos: darwin
+            goarch: arm64
+          - os: windows-latest
+            arch: amd64
+            goos: windows
+            goarch: amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/}
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version: ${VERSION}"
+
+      - name: Download dependencies
+        run: make deps
+
+      - name: Build binaries
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p bin
+          go build -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }}" -o bin/uadc ./cmd/uadc
+          go build -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }}" -o bin/uadi ./cmd/uadi
+          go build -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }}" -o bin/uadvm ./cmd/uadvm
+          go build -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }}" -o bin/uadrepl ./cmd/uadrepl
+          go build -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }}" -o bin/uad-runner ./cmd/uad-runner
+
+      - name: Create release directory
+        run: |
+          mkdir -p release
+
+      - name: Package binaries (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          PLATFORM="${{ matrix.goos }}-${{ matrix.goarch }}"
+          ARCHIVE_NAME="uad-${VERSION}-${PLATFORM}.tar.gz"
+          
+          mkdir -p "release/uad-${VERSION}-${PLATFORM}"
+          cp bin/uadc bin/uadi bin/uadvm bin/uadrepl bin/uad-runner "release/uad-${VERSION}-${PLATFORM}/" 2>/dev/null || true
+          cp README.md LICENSE "release/uad-${VERSION}-${PLATFORM}/" 2>/dev/null || true
+          
+          cd release
+          tar -czf "${ARCHIVE_NAME}" "uad-${VERSION}-${PLATFORM}"
+          
+          # Generate checksum
+          if command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 "${ARCHIVE_NAME}" > "${ARCHIVE_NAME}.sha256"
+          elif command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${ARCHIVE_NAME}" > "${ARCHIVE_NAME}.sha256"
+          fi
+
+      - name: Package binaries (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $VERSION = "${{ steps.get_version.outputs.VERSION }}"
+          $PLATFORM = "windows-${{ matrix.goarch }}"
+          $ARCHIVE_NAME = "uad-${VERSION}-${PLATFORM}.zip"
+          
+          New-Item -ItemType Directory -Force -Path "release/uad-${VERSION}-${PLATFORM}"
+          Copy-Item bin/uadc.exe,bin/uadi.exe,bin/uadvm.exe,bin/uadrepl.exe,bin/uad-runner.exe "release/uad-${VERSION}-${PLATFORM}/" -ErrorAction SilentlyContinue
+          Copy-Item README.md,LICENSE "release/uad-${VERSION}-${PLATFORM}/" -ErrorAction SilentlyContinue
+          
+          Compress-Archive -Path "release/uad-${VERSION}-${PLATFORM}" -DestinationPath "release/${ARCHIVE_NAME}" -Force
+          
+          # Generate checksum
+          $hash = Get-FileHash -Path "release/${ARCHIVE_NAME}" -Algorithm SHA256
+          $hash.Hash | Out-File -FilePath "release/${ARCHIVE_NAME}.sha256" -Encoding ASCII
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: release/
+          retention-days: 30
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/}
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Version: ${VERSION}"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.sha256" \) -exec cp {} release-assets/ \;
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          cat > release-notes.md << EOF
+          # UAD Language ${VERSION}
+          
+          ## Release Highlights
+          
+          This release includes the following features and improvements:
+          
+          ### Core Language Features
+          - ✅ Complete syntax highlighting support
+          - ✅ Musical DSL (Score/Track/Bars/Motif)
+          - ✅ String Theory semantics (String/Brane/Coupling/Resonance)
+          - ✅ Entanglement semantics
+          
+          ### Tools
+          - ✅ Compiler (uadc)
+          - ✅ Interpreter (uadi)
+          - ✅ Virtual Machine (uadvm)
+          - ✅ REPL (uadrepl)
+          - ✅ Experiment Runner (uad-runner)
+          
+          ### Documentation
+          - ✅ Language Guide
+          - ✅ Specification documents
+          - ✅ Example programs
+          
+          ### VS Code Extension
+          - ✅ Syntax highlighting
+          - ✅ Language configuration
+          
+          ## Installation
+          
+          Download the appropriate binary for your platform:
+          
+          \`\`\`bash
+          # Linux
+          tar -xzf uad-${VERSION}-linux-amd64.tar.gz
+          
+          # macOS
+          tar -xzf uad-${VERSION}-darwin-amd64.tar.gz
+          # or for Apple Silicon:
+          tar -xzf uad-${VERSION}-darwin-arm64.tar.gz
+          
+          # Windows
+          # Extract uad-${VERSION}-windows-amd64.zip
+          \`\`\`
+          
+          ## Verify Checksums
+          
+          \`\`\`bash
+          sha256sum -c uad-${VERSION}-<platform>.tar.gz.sha256
+          \`\`\`
+          
+          ## Documentation
+          
+          - [Language Guide](https://github.com/dennislee928/UAD_Programming/blob/main/docs/LANGUAGE_GUIDE.md)
+          - [Specification](https://github.com/dennislee928/UAD_Programming/blob/main/docs/specs/CORE_LANGUAGE_SPEC.md)
+          - [Examples](https://github.com/dennislee928/UAD_Programming/tree/main/examples)
+          
+          ## Links
+          
+          - [VS Code Extension](https://github.com/dennislee928/UAD_Programming/tree/main/uad-vscode)
+          - [Issue Tracker](https://github.com/dennislee928/UAD_Programming/issues)
+          
+          EOF
+          cat release-notes.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: UAD Language ${{ steps.get_version.outputs.VERSION }}
+          body_path: release-notes.md
+          files: release-assets/*
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+

@@ -1,0 +1,160 @@
+// UAD Standard Library - String Operations Example
+//
+// This example demonstrates string manipulation functions
+
+fn main() -> Int {
+    println("=== UAD String Operations Demo ===");
+    println("");
+    
+    // ========== Basic Operations ==========
+    println("--- Basic Operations ---");
+    
+    let text = "  Hello, UAD Language!  ";
+    println("Original: '" + text + "'");
+    
+    let trimmed = trim(text);
+    println("Trimmed: '" + trimmed + "'");
+    
+    let upper = to_upper(trimmed);
+    println("Upper: " + upper);
+    
+    let lower = to_lower(trimmed);
+    println("Lower: " + lower);
+    
+    // ========== Split and Join ==========
+    println("");
+    println("--- Split and Join ---");
+    
+    let csv = "apple,banana,cherry,date";
+    println("CSV: " + csv);
+    
+    let fruits = split(csv, ",");
+    println("Split result: " + string(len(fruits)) + " items");
+    
+    for fruit in fruits {
+        println("  - " + fruit);
+    }
+    
+    let joined = join(fruits, " | ");
+    println("Joined: " + joined);
+    
+    // ========== Search and Match ==========
+    println("");
+    println("--- Search and Match ---");
+    
+    let sentence = "The quick brown fox jumps over the lazy dog";
+    println("Sentence: " + sentence);
+    
+    if contains(sentence, "fox") {
+        println("✓ Contains 'fox'");
+    }
+    
+    if starts_with(sentence, "The") {
+        println("✓ Starts with 'The'");
+    }
+    
+    if ends_with(sentence, "dog") {
+        println("✓ Ends with 'dog'");
+    }
+    
+    let index = index_of(sentence, "fox");
+    println("Index of 'fox': " + string(index));
+    
+    let not_found = index_of(sentence, "cat");
+    println("Index of 'cat': " + string(not_found)); // -1
+    
+    // ========== Replacement ==========
+    println("");
+    println("--- Replacement ---");
+    
+    let template = "Hello, {{name}}! Welcome to {{place}}.";
+    println("Template: " + template);
+    
+    let step1 = replace(template, "{{name}}", "Alice");
+    let step2 = replace(step1, "{{place}}", "UAD World");
+    println("Result: " + step2);
+    
+    // ========== Word Counter ==========
+    println("");
+    println("--- Word Counter ---");
+    
+    let paragraph = "the quick brown fox jumps over the lazy dog the fox";
+    let words = split(paragraph, " ");
+    
+    println("Text: " + paragraph);
+    println("Word count: " + string(len(words)));
+    
+    // Count "the"
+    let the_count = 0;
+    for word in words {
+        if word == "the" {
+            the_count = the_count + 1;
+        }
+    }
+    println("'the' appears: " + string(the_count) + " times");
+    
+    // ========== Email Validation (Simple) ==========
+    println("");
+    println("--- Email Validation ---");
+    
+    fn is_valid_email(email: String) -> Bool {
+        if !contains(email, "@") {
+            return false;
+        }
+        
+        if !contains(email, ".") {
+            return false;
+        }
+        
+        let at_index = index_of(email, "@");
+        let dot_index = index_of(email, ".");
+        
+        // @ must come before .
+        if at_index > dot_index {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    let emails = [
+        "alice@example.com",
+        "bob@test",
+        "charlie.example.com",
+        "david@company.co.uk"
+    ];
+    
+    for email in emails {
+        let valid = is_valid_email(email);
+        if valid {
+            println("✓ " + email + " is valid");
+        } else {
+            println("✗ " + email + " is invalid");
+        }
+    }
+    
+    // ========== URL Parser (Simple) ==========
+    println("");
+    println("--- URL Parser ---");
+    
+    let url = "https://example.com:8080/path/to/resource?key=value";
+    println("URL: " + url);
+    
+    // Extract protocol
+    let protocol_end = index_of(url, "://");
+    if protocol_end > 0 {
+        let protocol = "https"; // Simplified extraction
+        println("Protocol: " + protocol);
+    }
+    
+    // Check for query string
+    if contains(url, "?") {
+        println("Has query parameters: yes");
+    }
+    
+    println("");
+    println("=== Demo Complete ===");
+    
+    return 0;
+}
+

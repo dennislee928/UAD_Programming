@@ -1,0 +1,49 @@
+// Demo file for UAD unified CLI
+// Run with: uad run examples/cli_demo.uad
+
+fn main() -> Int {
+    println("=== UAD Unified CLI Demo ===");
+    println("");
+    
+    // Variables and arithmetic
+    let x = 42;
+    let y = 8;
+    println("x = " + string(x));
+    println("y = " + string(y));
+    println("x + y = " + string(x + y));
+    println("x * y = " + string(x * y));
+    println("");
+    
+    // String operations
+    let message = "Hello, UAD!";
+    println("Message: " + message);
+    println("Length: " + string(len(message)));
+    
+    if contains(message, "UAD") {
+        println("✓ Message contains 'UAD'");
+    }
+    println("");
+    
+    // Arrays
+    let numbers = [1, 2, 3, 4, 5];
+    println("Numbers: " + string(len(numbers)) + " elements");
+    
+    let sum = 0;
+    for n in numbers {
+        sum = sum + n;
+    }
+    println("Sum: " + string(sum));
+    println("");
+    
+    // Functions
+    fn square(n: Int) -> Int {
+        return n * n;
+    }
+    
+    println("square(7) = " + string(square(7)));
+    println("");
+    
+    println("=== Demo Complete ===");
+    return 0;
+}
+

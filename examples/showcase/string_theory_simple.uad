@@ -1,0 +1,67 @@
+// string_theory_simple.uad
+// Simplified String Theory DSL example demonstrating string/brane/coupling syntax
+
+// ============================================================================
+// String Field Declarations
+// ============================================================================
+
+// Define a string field with multiple modes (oscillation patterns)
+string FieldA {
+    modes {
+        frequency: Float,
+        amplitude: Float,
+        phase: Float,
+    }
+}
+
+string FieldB {
+    modes {
+        frequency: Float,
+        amplitude: Float,
+        energy: Float,
+    }
+}
+
+// ============================================================================
+// Brane (Dimensional Context) Declarations
+// ============================================================================
+
+// Define a 3D brane (dimensional space)
+brane Space3D {
+    dimensions [x, y, z]
+}
+
+// Define a 4D spacetime brane
+brane Spacetime {
+    dimensions [x, y, z, t]
+}
+
+// ============================================================================
+// Coupling Declarations (Field Interactions)
+// ============================================================================
+
+// Define how FieldA.frequency couples with FieldB.frequency
+coupling FieldA.frequency FieldB.frequency with strength 0.8
+
+// Define how FieldA.amplitude couples with FieldB.amplitude
+coupling FieldA.amplitude FieldB.amplitude with strength 0.5
+
+// ============================================================================
+// Resonance Rules (Conditional Interactions)
+// ============================================================================
+
+// Define a resonance condition
+resonance when FieldA.frequency > 100.0 {
+    print("High frequency resonance detected!");
+}
+
+// ============================================================================
+// Main Function
+// ============================================================================
+
+fn main() {
+    print("String Theory DSL - Field Coupling Demonstration");
+    print("This demonstrates field interactions and resonance");
+}
+
+

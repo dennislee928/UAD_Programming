@@ -1,0 +1,85 @@
+# 對抗模擬實驗配置
+# 模擬攻防對抗場景
+
+name: "Adversarial Simulation"
+description: "Multi-agent adversarial dynamics simulation with red team vs blue team"
+version: "1.0"
+author: "UAD Security Team"
+created: "2025-01-01"
+
+scenario:
+  script: "experiments/scenarios/attack_defense.uad"
+  type: "adversarial_game"
+
+parameters:
+  # 遊戲設置
+  game_type: "sequential"       # sequential | simultaneous
+  rounds: 100
+  
+  # Agent 配置
+  red_team:
+    count: 3
+    strategy: "adaptive"        # random | greedy | adaptive | learned
+    initial_resources: 1000
+    attack_capability: 0.8
+  
+  blue_team:
+    count: 5
+    strategy: "defensive"
+    initial_resources: 1500
+    defense_capability: 0.7
+  
+  # 環境參數
+  environment:
+    network_topology: "enterprise"  # simple | enterprise | complex
+    vulnerability_count: 50
+    detection_probability: 0.6
+  
+  # 時間參數（使用 Musical DSL）
+  temporal:
+    tempo: 120                  # BPM
+    time_signature: [4, 4]
+    total_bars: 32
+
+  random_seed: 12345
+
+output:
+  format: "json"
+  directory: "experiments/results"
+  filename_template: "adversarial_{timestamp}.json"
+  
+  metrics:
+    - "attack_success_rate"
+    - "defense_effectiveness"
+    - "mean_time_to_detect"
+    - "resource_utilization"
+    - "strategy_evolution"
+  
+  # 保存完整的遊戲歷史
+  save_full_history: true
+  
+  visualization: true
+
+runtime:
+  mode: "vm"                    # VM 模式以獲得更好的性能
+  timeout: 600
+  max_memory: 2048
+
+validation:
+  expected_attack_success_range: [0.3, 0.7]
+  expected_detection_rate_range: [0.5, 0.8]
+
+tags:
+  - "adversarial"
+  - "multi-agent"
+  - "red-team"
+  - "blue-team"
+  - "cyber-security"
+
+notes: |
+  模擬網路攻防對抗場景：
+  - 紅隊嘗試攻擊系統漏洞
+  - 藍隊防禦並檢測攻擊
+  - 雙方策略動態演化
+
+

@@ -1,0 +1,61 @@
+// entanglement_simple.uad
+// Simplified Entanglement DSL example demonstrating quantum-inspired shared state
+
+// ============================================================================
+// Entanglement Demonstration
+// ============================================================================
+
+fn demonstrate_entanglement() {
+    // Create three variables
+    let x: Int = 10;
+    let y: Int = 20;
+    let z: Int = 30;
+    
+    print("Before entanglement:");
+    print("x = ");
+    print(x);
+    print("y = ");
+    print(y);
+    print("z = ");
+    print(z);
+    
+    // Entangle x, y, and z - they now share the same backing value
+    entangle x, y, z;
+    
+    print("\nAfter entanglement, all variables share state");
+    print("(Full synchronization requires runtime integration)");
+}
+
+fn demonstrate_pair_entanglement() {
+    // Create two variables
+    let alice: Int = 1;
+    let bob: Int = 2;
+    
+    print("\nPair entanglement demonstration:");
+    print("alice = ");
+    print(alice);
+    print("bob = ");
+    print(bob);
+    
+    // Entangle alice and bob
+    entangle alice, bob;
+    
+    print("alice and bob are now entangled");
+}
+
+// ============================================================================
+// Main Function
+// ============================================================================
+
+fn main() {
+    print("Entanglement DSL - Shared State Demonstration");
+    print("This demonstrates quantum-inspired variable synchronization");
+    print("==========================================================\n");
+    
+    demonstrate_entanglement();
+    demonstrate_pair_entanglement();
+    
+    print("\nNote: Full entanglement semantics require runtime integration");
+}
+
+

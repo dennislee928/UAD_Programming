@@ -76,6 +76,7 @@ Modern AI and cyber defense systems face three intertwined challenges that exist
 **Current Ecosystem Fragmentation:**
 
 The current landscape relies on:
+
 - Python scripts (non-deterministic, hard to verify)
 - YAML configs (declarative but limited expressiveness)
 - Proprietary SIEM rules (vendor lock-in, no formal semantics)
@@ -107,6 +108,7 @@ These cannot model **"a decision and its future consequence"** as a single compu
 **現有生態系統割裂：**
 
 目前的生態系依賴：
+
 - Python 腳本（非決定性、難以驗證）
 - YAML 設定檔（宣告式但表達能力有限）
 - 專有的 SIEM 規則（供應商鎖定、無正式語義）
@@ -120,16 +122,20 @@ These cannot model **"a decision and its future consequence"** as a single compu
 .uad aims to:
 
 1. **Quantify Risk**: Make ethical and structural risk measurable via native language constructs.
+
    - Ethical primes, α values, and Π(x) distributions become programmable entities.
 
 2. **Unify Simulation**: Support multi-scale modeling—from micro-events (packets) to macro-trends (societal trust).
+
    - Agents, populations, and macro-states interact within a single execution model.
 
 3. **Bridge Operations & Research**: Serve as both a modeling tool for researchers and an orchestration layer for operational engineers.
+
    - Research: Formal models of adversarial dynamics and ethical risk.
    - Operations: Deploy verified security policies and Cyber Range scenarios.
 
 4. **Enable Reproducibility**: Deterministic execution ensures simulation results are scientifically rigorous.
+
    - Critical for Cyber Range training, red-team exercises, and compliance audits.
 
 5. **Provide Verifiability**: Static type checking and formal verification (future) ensure policies are safe before deployment.
@@ -139,16 +145,20 @@ These cannot model **"a decision and its future consequence"** as a single compu
 .uad 的設計目標為：
 
 1. **量化風險**：透過原生語言構造，讓倫理與結構性風險可被測量。
+
    - Ethical primes、α 值與 Π(x) 分布成為可程式化的實體。
 
 2. **統一模擬**：支援多尺度建模——從微觀事件（封包）到宏觀趨勢（社會信任度）。
+
    - Agent、群體與宏觀狀態在單一執行模型中互動。
 
 3. **連結維運與研究**：既是研究人員的建模工具，也是維運工程師的協調層。
+
    - 研究：對抗式動態與倫理風險的正式模型。
    - 維運：部署已驗證的安全策略與 Cyber Range 場景。
 
 4. **實現可重現性**：決定論執行確保模擬結果具科學嚴謹性。
+
    - 對 Cyber Range 訓練、紅隊演練與合規稽核至關重要。
 
 5. **提供可驗證性**：靜態型別檢查與形式驗證（未來）確保政策在部署前是安全的。
@@ -314,11 +324,13 @@ Source Code (.uad-model or .uad-core)
 The atomic unit of .uad is the interaction between an **Action** and a **Judge**.
 
 **Action (a)**: Represents an event requiring a decision. It carries properties like:
+
 - `complexity` (difficulty): Measure of task difficulty (e.g., code churn, log volume)
 - `true_value` (ground truth): The objectively correct decision (if known)
 - `importance` (weight): Criticality/impact of this decision
 
 **Judge (j)**: Represents the decision-maker (human, model, or hybrid). It produces:
+
 - `decision`: The actual decision made
 - `confidence`: Certainty level (optional)
 - `kind`: Type of judge (human, pipeline, model, hybrid)
@@ -352,11 +364,13 @@ enum JudgeKind {
 .uad 的基本運算單元是 **Action（行動）** 與 **Judge（判斷者）** 之間的互動。
 
 **Action (a)**：代表需要決策的事件。它攜帶屬性如：
+
 - `complexity`（複雜度）：任務難度的度量（如程式碼變動量、日誌量）
 - `true_value`（真實值）：客觀正確的決策（如果已知）
 - `importance`（重要性）：此決策的關鍵性/影響
 
 **Judge (j)**：代表決策者（人類、模型或混合）。它產出：
+
 - `decision`：實際做出的決策
 - `confidence`：確定程度（可選）
 - `kind`：判斷者類型（人類、管線、模型、混合）
@@ -424,16 +438,19 @@ Given Action _a_ and Judge _j_:
 .uad allows modeling **Populations** (aggregates of Agents) and **MacroStates** (system-wide variables).
 
 **Agent**: Individual entity with:
+
 - Role (attacker, defender, analyst)
 - Capability (skill level)
 - Strategy (behavioral model)
 
 **Population**: Collection of agents with:
+
 - Distribution of capabilities
 - Interaction rules
 - Evolution dynamics
 
 **MacroState**: System-level variables:
+
 - Integrity (system health)
 - Trust (user confidence)
 - Threat Level (current risk)
@@ -472,16 +489,19 @@ fn simulate_step(pop: Population, state: MacroState, dt: Duration) -> MacroState
 .uad 允許對 **Population（群體）**（Agent 的集合）與 **MacroState（宏觀狀態）**（系統級變數）進行建模。
 
 **Agent**：個別實體，具有：
+
 - 角色（攻擊者、防禦者、分析師）
 - 能力（技能等級）
 - 策略（行為模型）
 
 **Population**：Agent 集合，具有：
+
 - 能力分布
 - 互動規則
 - 演化動態
 
 **MacroState**：系統級變數：
+
 - 完整性（系統健康度）
 - 信任度（使用者信心）
 - 威脅等級（當前風險）
@@ -548,12 +568,12 @@ See [`docs/IR_Spec.md`](IR_Spec.md) for complete specification.
 
 ### 5.2 Instruction Set Overview / 指令集概覽
 
-- **Stack Operations**: CONST_*, POP, DUP, SWAP
+- **Stack Operations**: CONST\_\*, POP, DUP, SWAP
 - **Arithmetic**: ADD, SUB, MUL, DIV, MOD, NEG, ABS
 - **Comparison**: LT, GT, LE, GE, EQ, NEQ
 - **Logic**: AND, OR, NOT
 - **Control Flow**: JMP, JMP_IF, CALL, RET, HALT
-- **Memory**: LOAD_LOCAL, STORE_LOCAL, ALLOC_*, LOAD_FIELD, STORE_FIELD
+- **Memory**: LOAD*LOCAL, STORE_LOCAL, ALLOC*\*, LOAD_FIELD, STORE_FIELD
 - **Built-ins**: BUILTIN_PRINT, BUILTIN_SQRT, BUILTIN_LOG, etc.
 - **Domain**: EMIT_EVENT, RECORD_MISTAKE, RECORD_PRIME, SAMPLE_RNG
 
@@ -598,13 +618,13 @@ judge pipeline_judge for MergeRequest {
 erh_profile "GitLab-DevSecOps" {
   actions from dataset "mr_security_logs"
   judge = pipeline_judge
-  
+
   prime_threshold {
     mistake_delta >= 0.5
     importance_quantile >= 0.90
     complexity >= 40.0
   }
-  
+
   fit_alpha {
     range = [10.0, 80.0]
     method = "loglog_regression"
@@ -613,6 +633,7 @@ erh_profile "GitLab-DevSecOps" {
 ```
 
 This compiles into .uad-core code that:
+
 - Loads dataset
 - Computes actions and judges
 - Identifies ethical primes
@@ -732,15 +753,15 @@ This compiles into .uad-core code that:
 
 ## 11. Comparison with Existing Tools / 與現有工具的比較
 
-| Feature                | Python + Pandas | SIEM Rules (Splunk) | .uad Language |
-|------------------------|-----------------|---------------------|---------------|
-| Determinism            | ❌ No          | ⚠️ Partial          | ✅ Yes        |
-| Type Safety            | ⚠️ Optional    | ❌ No               | ✅ Yes        |
-| Domain Primitives      | ❌ No          | ⚠️ Limited          | ✅ Yes        |
-| Verifiability          | ❌ No          | ❌ No               | ✅ Yes        |
-| Sandboxing             | ❌ No          | ⚠️ Vendor-specific  | ✅ Yes        |
-| Multi-scale Modeling   | ⚠️ Manual      | ❌ No               | ✅ Built-in   |
-| Formal Semantics       | ❌ No          | ❌ No               | ✅ Yes        |
+| Feature              | Python + Pandas | SIEM Rules (Splunk) | .uad Language |
+| -------------------- | --------------- | ------------------- | ------------- |
+| Determinism          | ❌ No           | ⚠️ Partial          | ✅ Yes        |
+| Type Safety          | ⚠️ Optional     | ❌ No               | ✅ Yes        |
+| Domain Primitives    | ❌ No           | ⚠️ Limited          | ✅ Yes        |
+| Verifiability        | ❌ No           | ❌ No               | ✅ Yes        |
+| Sandboxing           | ❌ No           | ⚠️ Vendor-specific  | ✅ Yes        |
+| Multi-scale Modeling | ⚠️ Manual       | ❌ No               | ✅ Built-in   |
+| Formal Semantics     | ❌ No           | ❌ No               | ✅ Yes        |
 
 ---
 
@@ -760,6 +781,7 @@ This compiles into .uad-core code that:
 **Call to Action:**
 
 We invite the community to:
+
 - Review this specification (RFC)
 - Contribute to the open-source implementation
 - Propose additional use cases and domain extensions
@@ -779,6 +801,7 @@ We invite the community to:
 **行動呼籲：**
 
 我們邀請社群：
+
 - 審閱本規格（RFC）
 - 貢獻開源實作
 - 提議額外使用案例與領域擴展
@@ -789,10 +812,10 @@ We invite the community to:
 ## References / 參考文獻
 
 1. **Ethical Riemann Hypothesis**: Original research (Dennis Lee, 2024)
-2. **Psychohistory**: Asimov, I. (1951). *Foundation*. Concept adapted for cyber security.
+2. **Psychohistory**: Asimov, I. (1951). _Foundation_. Concept adapted for cyber security.
 3. **Stack-based VMs**: JVM, WASM, Python bytecode
-4. **Type Systems**: Pierce, B. C. (2002). *Types and Programming Languages*
-5. **Formal Verification**: Leroy, X. (2009). Formal verification of a realistic compiler. *CACM*.
+4. **Type Systems**: Pierce, B. C. (2002). _Types and Programming Languages_
+5. **Formal Verification**: Leroy, X. (2009). Formal verification of a realistic compiler. _CACM_.
 
 ---
 
@@ -803,7 +826,7 @@ We invite the community to:
 ```uad
 fn main() {
   print("Hello, .uad!");
-  
+
   let x = 10;
   let y = 20;
   let result = x + y;
@@ -842,4 +865,3 @@ Hello, .uad!
 **Version History:**
 
 - v0.1.0-draft (2024-12): Initial whitepaper release
-

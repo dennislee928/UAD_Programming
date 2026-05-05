@@ -1,0 +1,15 @@
+fn main() -> Int {
+    let text = "hello,world";
+    let parts = split(text, ",");
+    println("Split test passed");
+    
+    let joined = join(parts, " | ");
+    println(joined);
+    
+    let has_hello = contains(text, "hello");
+    println("Contains test passed");
+    
+    return 0;
+}
+
+

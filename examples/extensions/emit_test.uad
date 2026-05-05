@@ -1,0 +1,28 @@
+// emit_test.uad
+// Test file for emit statement functionality
+
+// Define Event struct
+struct Event {
+    type: String,
+    target: String,
+    intensity: Int,
+}
+
+// Test emit statement in a motif
+motif test_emit {
+    emit Event {
+        type: "scan",
+        target: "network",
+        intensity: 3,
+    };
+}
+
+// Main function to test
+fn main() {
+    // Call the motif
+    // Note: For now, we'll just declare the motif
+    // In the future, motifs will be callable
+    println("Testing emit statement...");
+}
+
+

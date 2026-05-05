@@ -1,0 +1,12 @@
+# Benchmark results
+results/*.json
+
+# Compiled binaries
+/tmp/scenario*_go
+/tmp/scenario*_rs
+/tmp/scenario*_uad.uadir
+
+# Build artifacts
+*.o
+*.exe
+

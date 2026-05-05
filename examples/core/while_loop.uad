@@ -24,3 +24,4 @@ fn main() {
     println("Sum of 1 to 10: " + result);
 }
 
+
